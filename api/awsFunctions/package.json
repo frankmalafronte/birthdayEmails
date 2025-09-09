@@ -23,12 +23,13 @@
     "@types/aws-lambda": "latest",
     "@types/bcryptjs": "latest",
     "@types/jsonwebtoken": "latest",
-    "@types/node": "^24.3.1",
-    "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.7.1",
-    "@typescript-eslint/parser": "^7.7.1",
+    "@types/node": "latest",
+    "@types/uuid": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
     "eslint": "latest",
     "prettier": "latest",
+    "serverless-offline": "^14.4.0",
     "typescript": "latest"
   }
 }

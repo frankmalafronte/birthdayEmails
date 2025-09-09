@@ -1,0 +1,17 @@
+{
+  "name": "create-user-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function to create new users",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1691.0",
+    "bcryptjs": "^2.4.3",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "latest",
+    "@types/bcryptjs": "latest",
+    "@types/uuid": "latest",
+    "typescript": "latest"
+  }
+}

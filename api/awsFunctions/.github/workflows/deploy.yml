@@ -12,12 +12,18 @@ jobs:
     strategy:
       matrix:
         function:
+          - name: createUser
+            lambda_name: createUser
+            path: src/auth/createUser
           - name: findBirthdays
             lambda_name: findBirthdays
+            path: src/findBirthdays
           - name: addBirthday
             lambda_name: addBirthday
+            path: src/addBirthday
           - name: deleteBirthday
             lambda_name: deleteBirthday
+            path: src/deleteBirthday
 
     steps:
       - name: Checkout code
@@ -28,11 +34,23 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies and zip function
+      - name: Install TypeScript globally
+        run: npm install -g typescript
+
+      - name: Install root dependencies
         run: |
-          cd ${{ matrix.function.name }}
+          cd api/awsFunctions
           npm ci
-          zip -r ../${{ matrix.function.name }}.zip .
+
+      - name: Install function dependencies and build
+        run: |
+          cd api/awsFunctions/${{ matrix.function.path }}
+          npm install
+          cd ../..
+          tsc
+          cd ${{ matrix.function.path }}
+          cp ../../dist/${{ matrix.function.path }}/index.js ./
+          zip -r ../../../${{ matrix.function.name }}.zip . -x "*.ts" "tsconfig.json"
         shell: bash
 
       - name: Configure AWS credentials
@@ -40,7 +58,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2  
+          aws-region: us-east-1
 
       - name: Deploy to AWS Lambda
         run: |

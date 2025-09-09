@@ -1,4 +1,3 @@
-# aws-functions/serverless.yml
 service: birthday-app-backend
 
 frameworkVersion: '3'
@@ -6,5 +5,351 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-east-1'}
-  stage: ${opt:
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  
+  # Cost Control: Set global function defaults
+  timeout: 30                    # Max 30 seconds (prevents runaway functions)
+  memorySize: 256               # Start small, optimize later
+  
+  # Environment variables
+  environment:
+    USERS_TABLE: ${self:service}-users-${self:provider.stage}
+    BIRTHDAYS_TABLE: ${self:service}-birthdays-${self:provider.stage}
+    JWT_SECRET: ${ssm:/birthday-app/${self:provider.stage}/jwt-secret}
+    NODE_ENV: ${self:provider.stage}
+    STAGE: ${self:provider.stage}
+    RATE_LIMIT_ENABLED: true
+    MAX_REQUESTS_PER_MINUTE: 10    # Global rate limit per IP
+    MAX_REGISTRATIONS_PER_IP_PER_DAY: 5
+  
+  # Security: Least privilege IAM permissions
+  iamRoleStatements:
+    # DynamoDB permissions - only what's needed
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Query
+        - dynamodb:Scan
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}/index/*"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BIRTHDAYS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BIRTHDAYS_TABLE}/index/*"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-rate-limits-${self:provider.stage}"
+
+    
+    # Email permissions - only for birthday email function
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+        - ses:SendRawEmail
+        - ses:GetSendQuota       # Check daily send limits
+      Resource: "*"
+      Condition:
+        StringEquals:
+          "ses:FromAddress": "noreply@yourdomain.com"  # Restrict sender email
+
+# Lambda Functions with individual cost controls
+functions:
+  # User registration
+  createUser:
+    handler: dist/auth/createUser/index.handler
+    description: "Create new user account"
+    timeout: 10                           # Short timeout for simple operation
+    memorySize: 256                       # Sufficient for user creation
+    reservedConcurrency: 5              # 🛡️ Max 20 concurrent registrations
+    maximumRetryAttempts: 0               # 🛡️ Don't retry failed registrations
+    events:
+      - http:
+          path: auth/register
+          method: post
+          cors: true
+          request:
+            schemas:
+              application/json: ${file(schemas/create-user-schema.json)}
+    environment:
+      FUNCTION_NAME: createUser
+      MAX_REGISTRATIONS_PER_IP_PER_DAY: 5   # 🛡️ Per-IP daily limit
+
+
+  # Find user birthdays
+  findBirthdays:
+    handler: dist/findBirthdays/index.handler
+    description: "Find user's birthdays"
+    timeout: 15                           # Allow time for database query
+    memorySize: 256
+    reservedConcurrency: 10               # 🛡️ Limit concurrent requests
+    maximumRetryAttempts: 1               # Allow retries for network issues
+    events:
+      - http:
+          path: birthdays
+          method: get
+          cors: true
+          authorizer:
+            name: authorizerFunc
+            resultTtlInSeconds: 300
+    environment:
+      FUNCTION_NAME: findBirthdays
+
+  # Add birthday
+  addBirthday:
+    handler: dist/addBirthday/index.handler
+    description: "Add new birthday"
+    timeout: 10
+    memorySize: 256
+    reservedConcurrency: 15               # 🛡️ Prevent spam birthday creation
+    maximumRetryAttempts: 1
+    events:
+      - http:
+          path: birthdays
+          method: post
+          cors: true
+          authorizer:
+            name: authorizerFunc
+            resultTtlInSeconds: 300
+    environment:
+      FUNCTION_NAME: addBirthday
+
+  # Delete birthday
+  deleteBirthday:
+    handler: dist/deleteBirthday/index.handler
+    description: "Delete birthday"
+    timeout: 10
+    memorySize: 256
+    reservedConcurrency: 10
+    maximumRetryAttempts: 1
+    events:
+      - http:
+          path: birthdays/{id}
+          method: delete
+          cors: true
+          authorizer:
+            name: authorizerFunc
+            resultTtlInSeconds: 300
+    environment:
+      FUNCTION_NAME: deleteBirthday
+
+  # 🛡️ CRITICAL: Birthday email job with strict limits
+  sendBirthdayEmails:
+    handler: dist/jobs/sendBirthdayEmails/index.handler
+    description: "Daily job to send birthday reminder emails"
+    timeout: 300                          # 5 minutes max for email job
+    memorySize: 512                       # More memory for processing many emails
+    reservedConcurrency: 1                # 🛡️ CRITICAL: Only 1 instance ever (prevent duplicate emails)
+    maximumRetryAttempts: 1               # Only retry once if failed
+    events:
+      - schedule:
+          rate: rate(24 hours)            # 🛡️ Once per day maximum
+          enabled: true
+          input:
+            source: "scheduled-job"
+    environment:
+      FUNCTION_NAME: sendBirthdayEmails
+      MAX_EMAILS_PER_RUN: 1000            # 🛡️ Limit emails per execution
+      SES_DAILY_SEND_LIMIT: 200           # 🛡️ Check SES limits
+
+
+  # JWT Authorizer function
+  authorizerFunc:
+    handler: dist/auth/authorizer/index.handler
+    description: "JWT token authorizer"
+    timeout: 10
+    memorySize: 128                       # Minimal memory for JWT validation
+
+    resources:
+  Resources:
+    # 🛡️ Much more aggressive billing alarm
+    BillingAlarmLow:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-low
+        AlarmDescription: "Alert when estimated charges exceed $10"
+        MetricName: EstimatedCharges
+        Namespace: AWS/Billing
+        Statistic: Maximum
+        Period: 3600                      # Check hourly
+        EvaluationPeriods: 1
+        Threshold: 10                     # 🛡️ $10 threshold (was $50)
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: Currency
+            Value: USD
+        AlarmActions:
+          - !Ref BillingAlarmTopic
+
+    # 🛡️ Emergency billing alarm
+    BillingAlarmHigh:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-emergency
+        AlarmDescription: "EMERGENCY: Charges exceed $25"
+        MetricName: EstimatedCharges
+        Namespace: AWS/Billing
+        Statistic: Maximum
+        Period: 3600
+        EvaluationPeriods: 1
+        Threshold: 25                     # 🛡️ Emergency at $25
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: Currency
+            Value: USD
+        AlarmActions:
+          - !Ref EmergencyAlarmTopic
+
+             # 🛡️ Emergency SNS topic (can trigger Lambda to disable functions)
+    EmergencyAlarmTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-${self:provider.stage}-emergency-alerts
+
+             # 🛡️ Lambda invocation count alarm
+    LambdaInvocationAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${self:provider.stage}-lambda-invocations
+        AlarmDescription: "Alert on high Lambda invocation count"
+        MetricName: Invocations
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 3
+        Threshold: 500                    # 🛡️ Alert if > 500 invocations in 15 minutes
+        ComparisonOperator: GreaterThanThreshold
+        AlarmActions:
+          - !Ref EmergencyAlarmTopic      # This goes to emergency topic
+
+           # 🛡️ API Gateway usage plan for rate limiting
+    ApiGatewayUsagePlan:
+      Type: AWS::ApiGateway::UsagePlan
+      Properties:
+        UsagePlanName: ${self:service}-${self:provider.stage}-usage-plan
+        Description: "Rate limiting for birthday app API"
+        Throttle:
+          RateLimit: 10                   # 🛡️ 10 requests per second max
+          BurstLimit: 20                  # 🛡️ 20 request burst max
+        Quota:
+          Limit: 1000                     # 🛡️ 1000 requests per day per key
+          Period: DAY
+        ApiStages:
+          - ApiId:
+              Ref: ApiGatewayRestApi
+            Stage: ${self:provider.stage}
+
+             # 🛡️ Rate limiting table for tracking per-IP limits
+    RateLimitsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-rate-limits-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: ip
+            AttributeType: S
+          - AttributeName: action
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ip
+            KeyType: HASH
+          - AttributeName: action
+            KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true                   # Auto-delete old rate limit records
+        Tags:
+          - Key: Environment
+            Value: ${self:provider.stage}
+
+    # 🛡️ DynamoDB with stricter limits
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.USERS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: EmailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: KEYS_ONLY
+        # 🛡️ DynamoDB monitoring
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: false
+        Tags:
+          - Key: Environment
+            Value: ${self:provider.stage}
+
+    # 🛡️ DynamoDB write capacity alarm
+    DynamoDBWriteAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${self:provider.stage}-dynamodb-writes
+        AlarmDescription: "Alert on high DynamoDB write activity"
+        MetricName: ConsumedWriteCapacityUnits
+        Namespace: AWS/DynamoDB
+        Statistic: Sum
+        Period: 300                       # 5 minutes
+        EvaluationPeriods: 2              # 10 minutes total
+        Threshold: 1000                   # 🛡️ Alert if > 1000 writes in 10 minutes
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: TableName
+            Value: ${self:provider.environment.USERS_TABLE}
+        AlarmActions:
+          - !Ref BillingAlarmTopic
+
+          # 🚨 Emergency shutdown function
+  emergencyShutdown:
+    handler: dist/emergency/shutdown/index.handler
+    description: "EMERGENCY: Disable functions when billing threshold exceeded"
+    timeout: 60
+    memorySize: 256
+    reservedConcurrency: 1
+    # 🔑 This function needs admin permissions to disable other functions
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - lambda:UpdateFunctionConfiguration
+          - lambda:PutProvisionedConcurrencyConfig
+          - apigateway:*
+          - sns:Publish
+        Resource: "*"
+    events:
+      - sns:
+          arn: !Ref EmergencyAlarmTopic
+          topicName: ${self:service}-${self:provider.stage}-emergency-alerts
+
+          resources:
+  Resources:
+    # ... your existing resources ...
+
+    # 🚨 Enhanced emergency alarm with auto-shutdown
+    BillingAlarmHigh:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-emergency
+        AlarmDescription: "EMERGENCY: Auto-disable functions when charges exceed $25"
+        MetricName: EstimatedCharges
+        Namespace: AWS/Billing
+        Statistic: Maximum
+        Period: 3600                      # Check every hour
+        EvaluationPeriods: 1
+        Threshold: 25                     # $25 emergency threshold
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: Currency
+            Value: USD
+        AlarmActions:
+          - !Ref EmergencyAlarmTopic      # Triggers emergencyShutdown function
+        TreatMissingData: notBreaching

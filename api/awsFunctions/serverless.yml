@@ -1,0 +1,10 @@
+# aws-functions/serverless.yml
+service: birthday-app-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:

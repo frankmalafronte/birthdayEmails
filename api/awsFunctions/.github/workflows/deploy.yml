@@ -1,0 +1,49 @@
+name: Deploy All Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        function:
+          - name: findBirthdays
+            lambda_name: findBirthdays
+          - name: addBirthday
+            lambda_name: addBirthday
+          - name: deleteBirthday
+            lambda_name: deleteBirthday
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies and zip function
+        run: |
+          cd ${{ matrix.function.name }}
+          npm ci
+          zip -r ../${{ matrix.function.name }}.zip .
+        shell: bash
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2  
+
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ matrix.function.lambda_name }} \
+            --zip-file fileb://${{ matrix.function.name }}.zip

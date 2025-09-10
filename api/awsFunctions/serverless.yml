@@ -1,6 +1,10 @@
 service: birthday-app-backend
 
-frameworkVersion: '3'
+frameworkVersion: '4.x.x'
+useDotenv: true
+
+plugins:
+  - serverless-offline
 
 provider:
   name: aws
@@ -16,7 +20,7 @@ provider:
   environment:
     USERS_TABLE: ${self:service}-users-${self:provider.stage}
     BIRTHDAYS_TABLE: ${self:service}-birthdays-${self:provider.stage}
-    JWT_SECRET: ${ssm:/birthday-app/${self:provider.stage}/jwt-secret}
+    JWT_SECRET: ${env:JWT_SECRET, ssm:/birthday-app/${self:provider.stage}/jwt-secret}
     NODE_ENV: ${self:provider.stage}
     STAGE: ${self:provider.stage}
     RATE_LIMIT_ENABLED: true
@@ -30,7 +34,6 @@ provider:
       Action:
         - dynamodb:GetItem
         - dynamodb:PutItem
-        - dynamodb:UpdateItem
         - dynamodb:DeleteItem
         - dynamodb:Query
         - dynamodb:Scan
@@ -70,7 +73,7 @@ functions:
           cors: true
           request:
             schemas:
-              application/json: ${file(schemas/create-user-schema.json)}
+              application/json: ${file(schemas/create-user.json)}
     environment:
       FUNCTION_NAME: createUser
       MAX_REGISTRATIONS_PER_IP_PER_DAY: 5   # 🛡️ Per-IP daily limit
@@ -132,6 +135,26 @@ functions:
             resultTtlInSeconds: 300
     environment:
       FUNCTION_NAME: deleteBirthday
+
+  # Get all users
+  getUsers:
+    handler: dist/getUsers/index.handler
+    description: "Get all users"
+    timeout: 15
+    memorySize: 256
+    reservedConcurrency: 10
+    maximumRetryAttempts: 1
+    events:
+      - http:
+          path: users
+          method: get
+          cors: true
+          authorizer:
+            name: authorizerFunc
+            resultTtlInSeconds: 300
+    environment:
+      FUNCTION_NAME: getUsers
+
 
   # 🛡️ CRITICAL: Birthday email job with strict limits
   sendBirthdayEmails:
@@ -330,9 +353,6 @@ functions:
           arn: !Ref EmergencyAlarmTopic
           topicName: ${self:service}-${self:provider.stage}-emergency-alerts
 
-          resources:
-  Resources:
-    # ... your existing resources ...
 
     # 🚨 Enhanced emergency alarm with auto-shutdown
     BillingAlarmHigh:

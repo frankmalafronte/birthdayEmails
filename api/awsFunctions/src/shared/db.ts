@@ -35,7 +35,7 @@ export const dbScan = (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
   return dynamodb.scan(params).promise();
 };
 
-export const dbUpdate = (params: AWS.DynamoDB.DocumentClient.UpdateInput) => {
+export const dbUpdate = (params: AWS.DynamoDB.DocumentClient.UpdateItemInput) => {
   return dynamodb.update(params).promise();
 };
 

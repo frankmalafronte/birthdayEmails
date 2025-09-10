@@ -1,0 +1,554 @@
+{
+  "/Users/frank/Projects/birthdayEmails/api/awsFunctions/serverless.yml": {
+    "versionFramework": "4.18.2",
+    "servicePath": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "birthday-app-backend",
+      "frameworkVersion": "4.x.x",
+      "useDotenv": true,
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1",
+        "stage": "dev",
+        "timeout": 30,
+        "memorySize": 256,
+        "environment": {
+          "USERS_TABLE": "birthday-app-backend-users-dev",
+          "BIRTHDAYS_TABLE": "birthday-app-backend-birthdays-dev",
+          "JWT_SECRET": "<REDACTED>",
+          "NODE_ENV": "dev",
+          "STAGE": "dev",
+          "RATE_LIMIT_ENABLED": true,
+          "MAX_REQUESTS_PER_MINUTE": 10,
+          "MAX_REGISTRATIONS_PER_IP_PER_DAY": 5
+        },
+        "iamRoleStatements": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:Query",
+              "dynamodb:Scan"
+            ],
+            "Resource": [
+              "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-users-dev",
+              "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-users-dev/index/*",
+              "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-birthdays-dev",
+              "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-birthdays-dev/index/*",
+              "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-rate-limits-dev"
+            ]
+          },
+          {
+            "Effect": "Allow",
+            "Action": [
+              "ses:SendEmail",
+              "ses:SendRawEmail",
+              "ses:GetSendQuota"
+            ],
+            "Resource": "*",
+            "Condition": {
+              "StringEquals": {
+                "ses:FromAddress": "noreply@yourdomain.com"
+              }
+            }
+          }
+        ]
+      },
+      "functions": {
+        "createUser": {
+          "handler": "dist/auth/createUser/index.handler",
+          "description": "Create new user account",
+          "timeout": 10,
+          "memorySize": 256,
+          "reservedConcurrency": 5,
+          "maximumRetryAttempts": 0,
+          "events": [
+            {
+              "http": {
+                "path": "auth/register",
+                "method": "post",
+                "cors": true,
+                "request": {
+                  "schemas": {
+                    "application/json": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "password": "<REDACTED>"
+                      },
+                      "required": [
+                        "email",
+                        "password"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "environment": {
+            "FUNCTION_NAME": "createUser",
+            "MAX_REGISTRATIONS_PER_IP_PER_DAY": 5
+          }
+        },
+        "findBirthdays": {
+          "handler": "dist/findBirthdays/index.handler",
+          "description": "Find user's birthdays",
+          "timeout": 15,
+          "memorySize": 256,
+          "reservedConcurrency": 10,
+          "maximumRetryAttempts": 1,
+          "events": [
+            {
+              "http": {
+                "path": "birthdays",
+                "method": "get",
+                "cors": true,
+                "authorizer": {
+                  "name": "authorizerFunc",
+                  "resultTtlInSeconds": 300
+                }
+              }
+            }
+          ],
+          "environment": {
+            "FUNCTION_NAME": "findBirthdays"
+          }
+        },
+        "addBirthday": {
+          "handler": "dist/addBirthday/index.handler",
+          "description": "Add new birthday",
+          "timeout": 10,
+          "memorySize": 256,
+          "reservedConcurrency": 15,
+          "maximumRetryAttempts": 1,
+          "events": [
+            {
+              "http": {
+                "path": "birthdays",
+                "method": "post",
+                "cors": true,
+                "authorizer": {
+                  "name": "authorizerFunc",
+                  "resultTtlInSeconds": 300
+                }
+              }
+            }
+          ],
+          "environment": {
+            "FUNCTION_NAME": "addBirthday"
+          }
+        },
+        "deleteBirthday": {
+          "handler": "dist/deleteBirthday/index.handler",
+          "description": "Delete birthday",
+          "timeout": 10,
+          "memorySize": 256,
+          "reservedConcurrency": 10,
+          "maximumRetryAttempts": 1,
+          "events": [
+            {
+              "http": {
+                "path": "birthdays/{id}",
+                "method": "delete",
+                "cors": true,
+                "authorizer": {
+                  "name": "authorizerFunc",
+                  "resultTtlInSeconds": 300
+                }
+              }
+            }
+          ],
+          "environment": {
+            "FUNCTION_NAME": "deleteBirthday"
+          }
+        },
+        "sendBirthdayEmails": {
+          "handler": "dist/jobs/sendBirthdayEmails/index.handler",
+          "description": "Daily job to send birthday reminder emails",
+          "timeout": 300,
+          "memorySize": 512,
+          "reservedConcurrency": 1,
+          "maximumRetryAttempts": 1,
+          "events": [
+            {
+              "schedule": {
+                "rate": "rate(24 hours)",
+                "enabled": true,
+                "input": {
+                  "source": "scheduled-job"
+                }
+              }
+            }
+          ],
+          "environment": {
+            "FUNCTION_NAME": "sendBirthdayEmails",
+            "MAX_EMAILS_PER_RUN": 1000,
+            "SES_DAILY_SEND_LIMIT": 200
+          }
+        },
+        "authorizerFunc": {
+          "handler": "dist/auth/authorizer/index.handler",
+          "description": "JWT token authorizer",
+          "timeout": 10,
+          "memorySize": 128,
+          "resources": null
+        },
+        "Resources": {
+          "BillingAlarmLow": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "birthday-app-backend-dev-billing-alarm-low",
+              "AlarmDescription": "Alert when estimated charges exceed $10",
+              "MetricName": "EstimatedCharges",
+              "Namespace": "AWS/Billing",
+              "Statistic": "Maximum",
+              "Period": 3600,
+              "EvaluationPeriods": 1,
+              "Threshold": 10,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "Dimensions": [
+                {
+                  "Name": "Currency",
+                  "Value": "USD"
+                }
+              ],
+              "AlarmActions": [
+                {
+                  "Ref": "BillingAlarmTopic"
+                }
+              ]
+            }
+          },
+          "BillingAlarmHigh": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "birthday-app-backend-dev-billing-alarm-emergency",
+              "AlarmDescription": "EMERGENCY: Charges exceed $25",
+              "MetricName": "EstimatedCharges",
+              "Namespace": "AWS/Billing",
+              "Statistic": "Maximum",
+              "Period": 3600,
+              "EvaluationPeriods": 1,
+              "Threshold": 25,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "Dimensions": [
+                {
+                  "Name": "Currency",
+                  "Value": "USD"
+                }
+              ],
+              "AlarmActions": [
+                {
+                  "Ref": "EmergencyAlarmTopic"
+                }
+              ]
+            }
+          },
+          "EmergencyAlarmTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+              "TopicName": "birthday-app-backend-dev-emergency-alerts"
+            }
+          },
+          "LambdaInvocationAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "birthday-app-backend-dev-lambda-invocations",
+              "AlarmDescription": "Alert on high Lambda invocation count",
+              "MetricName": "Invocations",
+              "Namespace": "AWS/Lambda",
+              "Statistic": "Sum",
+              "Period": 300,
+              "EvaluationPeriods": 3,
+              "Threshold": 500,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "AlarmActions": [
+                {
+                  "Ref": "EmergencyAlarmTopic"
+                }
+              ]
+            }
+          },
+          "ApiGatewayUsagePlan": {
+            "Type": "AWS::ApiGateway::UsagePlan",
+            "Properties": {
+              "UsagePlanName": "birthday-app-backend-dev-usage-plan",
+              "Description": "Rate limiting for birthday app API",
+              "Throttle": {
+                "RateLimit": 10,
+                "BurstLimit": 20
+              },
+              "Quota": {
+                "Limit": 1000,
+                "Period": "DAY"
+              },
+              "ApiStages": [
+                {
+                  "ApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  "Stage": "dev"
+                }
+              ]
+            }
+          },
+          "RateLimitsTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "birthday-app-backend-rate-limits-dev",
+              "BillingMode": "PAY_PER_REQUEST",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "ip",
+                  "AttributeType": "S"
+                },
+                {
+                  "AttributeName": "action",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "ip",
+                  "KeyType": "HASH"
+                },
+                {
+                  "AttributeName": "action",
+                  "KeyType": "RANGE"
+                }
+              ],
+              "TimeToLiveSpecification": {
+                "AttributeName": "ttl",
+                "Enabled": true
+              },
+              "Tags": [
+                {
+                  "Key": "Environment",
+                  "Value": "dev"
+                }
+              ]
+            }
+          },
+          "UsersTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "birthday-app-backend-users-dev",
+              "BillingMode": "PAY_PER_REQUEST",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                },
+                {
+                  "AttributeName": "email",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "GlobalSecondaryIndexes": [
+                {
+                  "IndexName": "EmailIndex",
+                  "KeySchema": [
+                    {
+                      "AttributeName": "email",
+                      "KeyType": "HASH"
+                    }
+                  ],
+                  "Projection": {
+                    "ProjectionType": "KEYS_ONLY"
+                  }
+                }
+              ],
+              "PointInTimeRecoverySpecification": {
+                "PointInTimeRecoveryEnabled": false
+              },
+              "Tags": [
+                {
+                  "Key": "Environment",
+                  "Value": "dev"
+                }
+              ]
+            }
+          },
+          "DynamoDBWriteAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "birthday-app-backend-dev-dynamodb-writes",
+              "AlarmDescription": "Alert on high DynamoDB write activity",
+              "MetricName": "ConsumedWriteCapacityUnits",
+              "Namespace": "AWS/DynamoDB",
+              "Statistic": "Sum",
+              "Period": 300,
+              "EvaluationPeriods": 2,
+              "Threshold": 1000,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "Dimensions": [
+                {
+                  "Name": "TableName",
+                  "Value": "birthday-app-backend-users-dev"
+                }
+              ],
+              "AlarmActions": [
+                {
+                  "Ref": "BillingAlarmTopic"
+                }
+              ]
+            }
+          }
+        },
+        "emergencyShutdown": {
+          "handler": "dist/emergency/shutdown/index.handler",
+          "description": "EMERGENCY: Disable functions when billing threshold exceeded",
+          "timeout": 60,
+          "memorySize": 256,
+          "reservedConcurrency": 1,
+          "iamRoleStatements": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:PutProvisionedConcurrencyConfig",
+                "apigateway:*",
+                "sns:Publish"
+              ],
+              "Resource": "*"
+            }
+          ],
+          "events": [
+            {
+              "sns": {
+                "arn": {
+                  "Ref": "EmergencyAlarmTopic"
+                },
+                "topicName": "birthday-app-backend-dev-emergency-alerts"
+              }
+            }
+          ],
+          "BillingAlarmHigh": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "birthday-app-backend-dev-billing-alarm-emergency",
+              "AlarmDescription": "EMERGENCY: Auto-disable functions when charges exceed $25",
+              "MetricName": "EstimatedCharges",
+              "Namespace": "AWS/Billing",
+              "Statistic": "Maximum",
+              "Period": 3600,
+              "EvaluationPeriods": 1,
+              "Threshold": 25,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "Dimensions": [
+                {
+                  "Name": "Currency",
+                  "Value": "USD"
+                }
+              ],
+              "AlarmActions": [
+                {
+                  "Ref": "EmergencyAlarmTopic"
+                }
+              ],
+              "TreatMissingData": "notBreaching"
+            }
+          }
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1",
+      "stage": "dev",
+      "timeout": 30,
+      "memorySize": 256,
+      "environment": {
+        "USERS_TABLE": "birthday-app-backend-users-dev",
+        "BIRTHDAYS_TABLE": "birthday-app-backend-birthdays-dev",
+        "JWT_SECRET": "<REDACTED>",
+        "NODE_ENV": "dev",
+        "STAGE": "dev",
+        "RATE_LIMIT_ENABLED": true,
+        "MAX_REQUESTS_PER_MINUTE": 10,
+        "MAX_REGISTRATIONS_PER_IP_PER_DAY": 5
+      },
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:PutItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:Query",
+            "dynamodb:Scan"
+          ],
+          "Resource": [
+            "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-users-dev",
+            "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-users-dev/index/*",
+            "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-birthdays-dev",
+            "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-birthdays-dev/index/*",
+            "arn:aws:dynamodb:us-east-1:*:table/birthday-app-backend-rate-limits-dev"
+          ]
+        },
+        {
+          "Effect": "Allow",
+          "Action": [
+            "ses:SendEmail",
+            "ses:SendRawEmail",
+            "ses:GetSendQuota"
+          ],
+          "Resource": "*",
+          "Condition": {
+            "StringEquals": {
+              "ses:FromAddress": "noreply@yourdomain.com"
+            }
+          }
+        }
+      ]
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "error": {
+      "message": "Failed to resolve variable '/birthday-app/dev/jwt-secret' with resolver 'ssm' and provider 'default-aws-credential-resolver': Error: AWS credentials missing or invalid. Original error from AWS: Could not load credentials from any providers",
+      "stack": "Error: Failed to resolve variable '/birthday-app/dev/jwt-secret' with resolver 'ssm' and provider 'default-aws-credential-resolver': Error: AWS credentials missing or invalid. Original error from AWS: Could not load credentials from any providers\n    at #resolveKey (file:///Users/frank/.serverless/releases/4.18.2/package/dist/sf-core.js:809:25583)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async _ResolverManager.resolve (file:///Users/frank/.serverless/releases/4.18.2/package/dist/sf-core.js:809:31573)\n    at async #handlePlaceholderNode (file:///Users/frank/.serverless/releases/4.18.2/package/dist/sf-core.js:809:30118)\n    at async file:///Users/frank/.serverless/releases/4.18.2/package/dist/sf-core.js:809:27990\n    at async processNodeAndHandleCompletion (file:///Users/frank/.serverless/releases/4.18.2/package/dist/sf-core.js:809:16769)",
+      "code": "RESOLVER_RESOLVE_VARIABLE_ERROR"
+    },
+    "serviceRawFile": "service: birthday-app-backend\n\nframeworkVersion: '4.x.x'\nuseDotenv: true\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  stage: ${opt:stage, 'dev'}\n  \n  # Cost Control: Set global function defaults\n  timeout: 30                    # Max 30 seconds (prevents runaway functions)\n  memorySize: 256               # Start small, optimize later\n  \n  # Environment variables\n  environment:\n    USERS_TABLE: ${self:service}-users-${self:provider.stage}\n    BIRTHDAYS_TABLE: ${self:service}-birthdays-${self:provider.stage}\n    JWT_SECRET: ${env:JWT_SECRET, ssm:/birthday-app/${self:provider.stage}/jwt-secret}\n    NODE_ENV: ${self:provider.stage}\n    STAGE: ${self:provider.stage}\n    RATE_LIMIT_ENABLED: true\n    MAX_REQUESTS_PER_MINUTE: 10    # Global rate limit per IP\n    MAX_REGISTRATIONS_PER_IP_PER_DAY: 5\n  \n  # Security: Least privilege IAM permissions\n  iamRoleStatements:\n    # DynamoDB permissions - only what's needed\n    - Effect: Allow\n      Action:\n        - dynamodb:GetItem\n        - dynamodb:PutItem\n        - dynamodb:DeleteItem\n        - dynamodb:Query\n        - dynamodb:Scan\n      Resource:\n        - \"arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}\"\n        - \"arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}/index/*\"\n        - \"arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BIRTHDAYS_TABLE}\"\n        - \"arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BIRTHDAYS_TABLE}/index/*\"\n        - \"arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-rate-limits-${self:provider.stage}\"\n\n    \n    # Email permissions - only for birthday email function\n    - Effect: Allow\n      Action:\n        - ses:SendEmail\n        - ses:SendRawEmail\n        - ses:GetSendQuota       # Check daily send limits\n      Resource: \"*\"\n      Condition:\n        StringEquals:\n          \"ses:FromAddress\": \"noreply@yourdomain.com\"  # Restrict sender email\n\n# Lambda Functions with individual cost controls\nfunctions:\n  # User registration\n  createUser:\n    handler: dist/auth/createUser/index.handler\n    description: \"Create new user account\"\n    timeout: 10                           # Short timeout for simple operation\n    memorySize: 256                       # Sufficient for user creation\n    reservedConcurrency: 5              # 🛡️ Max 20 concurrent registrations\n    maximumRetryAttempts: 0               # 🛡️ Don't retry failed registrations\n    events:\n      - http:\n          path: auth/register\n          method: post\n          cors: true\n          request:\n            schemas:\n              application/json: ${file(schemas/create-user.json)}\n    environment:\n      FUNCTION_NAME: createUser\n      MAX_REGISTRATIONS_PER_IP_PER_DAY: 5   # 🛡️ Per-IP daily limit\n\n\n  # Find user birthdays\n  findBirthdays:\n    handler: dist/findBirthdays/index.handler\n    description: \"Find user's birthdays\"\n    timeout: 15                           # Allow time for database query\n    memorySize: 256\n    reservedConcurrency: 10               # 🛡️ Limit concurrent requests\n    maximumRetryAttempts: 1               # Allow retries for network issues\n    events:\n      - http:\n          path: birthdays\n          method: get\n          cors: true\n          authorizer:\n            name: authorizerFunc\n            resultTtlInSeconds: 300\n    environment:\n      FUNCTION_NAME: findBirthdays\n\n  # Add birthday\n  addBirthday:\n    handler: dist/addBirthday/index.handler\n    description: \"Add new birthday\"\n    timeout: 10\n    memorySize: 256\n    reservedConcurrency: 15               # 🛡️ Prevent spam birthday creation\n    maximumRetryAttempts: 1\n    events:\n      - http:\n          path: birthdays\n          method: post\n          cors: true\n          authorizer:\n            name: authorizerFunc\n            resultTtlInSeconds: 300\n    environment:\n      FUNCTION_NAME: addBirthday\n\n  # Delete birthday\n  deleteBirthday:\n    handler: dist/deleteBirthday/index.handler\n    description: \"Delete birthday\"\n    timeout: 10\n    memorySize: 256\n    reservedConcurrency: 10\n    maximumRetryAttempts: 1\n    events:\n      - http:\n          path: birthdays/{id}\n          method: delete\n          cors: true\n          authorizer:\n            name: authorizerFunc\n            resultTtlInSeconds: 300\n    environment:\n      FUNCTION_NAME: deleteBirthday\n\n  # 🛡️ CRITICAL: Birthday email job with strict limits\n  sendBirthdayEmails:\n    handler: dist/jobs/sendBirthdayEmails/index.handler\n    description: \"Daily job to send birthday reminder emails\"\n    timeout: 300                          # 5 minutes max for email job\n    memorySize: 512                       # More memory for processing many emails\n    reservedConcurrency: 1                # 🛡️ CRITICAL: Only 1 instance ever (prevent duplicate emails)\n    maximumRetryAttempts: 1               # Only retry once if failed\n    events:\n      - schedule:\n          rate: rate(24 hours)            # 🛡️ Once per day maximum\n          enabled: true\n          input:\n            source: \"scheduled-job\"\n    environment:\n      FUNCTION_NAME: sendBirthdayEmails\n      MAX_EMAILS_PER_RUN: 1000            # 🛡️ Limit emails per execution\n      SES_DAILY_SEND_LIMIT: 200           # 🛡️ Check SES limits\n\n\n  # JWT Authorizer function\n  authorizerFunc:\n    handler: dist/auth/authorizer/index.handler\n    description: \"JWT token authorizer\"\n    timeout: 10\n    memorySize: 128                       # Minimal memory for JWT validation\n\n    resources:\n  Resources:\n    # 🛡️ Much more aggressive billing alarm\n    BillingAlarmLow:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-low\n        AlarmDescription: \"Alert when estimated charges exceed $10\"\n        MetricName: EstimatedCharges\n        Namespace: AWS/Billing\n        Statistic: Maximum\n        Period: 3600                      # Check hourly\n        EvaluationPeriods: 1\n        Threshold: 10                     # 🛡️ $10 threshold (was $50)\n        ComparisonOperator: GreaterThanThreshold\n        Dimensions:\n          - Name: Currency\n            Value: USD\n        AlarmActions:\n          - !Ref BillingAlarmTopic\n\n    # 🛡️ Emergency billing alarm\n    BillingAlarmHigh:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-emergency\n        AlarmDescription: \"EMERGENCY: Charges exceed $25\"\n        MetricName: EstimatedCharges\n        Namespace: AWS/Billing\n        Statistic: Maximum\n        Period: 3600\n        EvaluationPeriods: 1\n        Threshold: 25                     # 🛡️ Emergency at $25\n        ComparisonOperator: GreaterThanThreshold\n        Dimensions:\n          - Name: Currency\n            Value: USD\n        AlarmActions:\n          - !Ref EmergencyAlarmTopic\n\n             # 🛡️ Emergency SNS topic (can trigger Lambda to disable functions)\n    EmergencyAlarmTopic:\n      Type: AWS::SNS::Topic\n      Properties:\n        TopicName: ${self:service}-${self:provider.stage}-emergency-alerts\n\n             # 🛡️ Lambda invocation count alarm\n    LambdaInvocationAlarm:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: ${self:service}-${self:provider.stage}-lambda-invocations\n        AlarmDescription: \"Alert on high Lambda invocation count\"\n        MetricName: Invocations\n        Namespace: AWS/Lambda\n        Statistic: Sum\n        Period: 300\n        EvaluationPeriods: 3\n        Threshold: 500                    # 🛡️ Alert if > 500 invocations in 15 minutes\n        ComparisonOperator: GreaterThanThreshold\n        AlarmActions:\n          - !Ref EmergencyAlarmTopic      # This goes to emergency topic\n\n           # 🛡️ API Gateway usage plan for rate limiting\n    ApiGatewayUsagePlan:\n      Type: AWS::ApiGateway::UsagePlan\n      Properties:\n        UsagePlanName: ${self:service}-${self:provider.stage}-usage-plan\n        Description: \"Rate limiting for birthday app API\"\n        Throttle:\n          RateLimit: 10                   # 🛡️ 10 requests per second max\n          BurstLimit: 20                  # 🛡️ 20 request burst max\n        Quota:\n          Limit: 1000                     # 🛡️ 1000 requests per day per key\n          Period: DAY\n        ApiStages:\n          - ApiId:\n              Ref: ApiGatewayRestApi\n            Stage: ${self:provider.stage}\n\n             # 🛡️ Rate limiting table for tracking per-IP limits\n    RateLimitsTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: ${self:service}-rate-limits-${self:provider.stage}\n        BillingMode: PAY_PER_REQUEST\n        AttributeDefinitions:\n          - AttributeName: ip\n            AttributeType: S\n          - AttributeName: action\n            AttributeType: S\n        KeySchema:\n          - AttributeName: ip\n            KeyType: HASH\n          - AttributeName: action\n            KeyType: RANGE\n        TimeToLiveSpecification:\n          AttributeName: ttl\n          Enabled: true                   # Auto-delete old rate limit records\n        Tags:\n          - Key: Environment\n            Value: ${self:provider.stage}\n\n    # 🛡️ DynamoDB with stricter limits\n    UsersTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: ${self:provider.environment.USERS_TABLE}\n        BillingMode: PAY_PER_REQUEST\n        AttributeDefinitions:\n          - AttributeName: id\n            AttributeType: S\n          - AttributeName: email\n            AttributeType: S\n        KeySchema:\n          - AttributeName: id\n            KeyType: HASH\n        GlobalSecondaryIndexes:\n          - IndexName: EmailIndex\n            KeySchema:\n              - AttributeName: email\n                KeyType: HASH\n            Projection:\n              ProjectionType: KEYS_ONLY\n        # 🛡️ DynamoDB monitoring\n        PointInTimeRecoverySpecification:\n          PointInTimeRecoveryEnabled: false\n        Tags:\n          - Key: Environment\n            Value: ${self:provider.stage}\n\n    # 🛡️ DynamoDB write capacity alarm\n    DynamoDBWriteAlarm:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: ${self:service}-${self:provider.stage}-dynamodb-writes\n        AlarmDescription: \"Alert on high DynamoDB write activity\"\n        MetricName: ConsumedWriteCapacityUnits\n        Namespace: AWS/DynamoDB\n        Statistic: Sum\n        Period: 300                       # 5 minutes\n        EvaluationPeriods: 2              # 10 minutes total\n        Threshold: 1000                   # 🛡️ Alert if > 1000 writes in 10 minutes\n        ComparisonOperator: GreaterThanThreshold\n        Dimensions:\n          - Name: TableName\n            Value: ${self:provider.environment.USERS_TABLE}\n        AlarmActions:\n          - !Ref BillingAlarmTopic\n\n          # 🚨 Emergency shutdown function\n  emergencyShutdown:\n    handler: dist/emergency/shutdown/index.handler\n    description: \"EMERGENCY: Disable functions when billing threshold exceeded\"\n    timeout: 60\n    memorySize: 256\n    reservedConcurrency: 1\n    # 🔑 This function needs admin permissions to disable other functions\n    iamRoleStatements:\n      - Effect: Allow\n        Action:\n          - lambda:UpdateFunctionConfiguration\n          - lambda:PutProvisionedConcurrencyConfig\n          - apigateway:*\n          - sns:Publish\n        Resource: \"*\"\n    events:\n      - sns:\n          arn: !Ref EmergencyAlarmTopic\n          topicName: ${self:service}-${self:provider.stage}-emergency-alerts\n\n\n    # 🚨 Enhanced emergency alarm with auto-shutdown\n    BillingAlarmHigh:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-emergency\n        AlarmDescription: \"EMERGENCY: Auto-disable functions when charges exceed $25\"\n        MetricName: EstimatedCharges\n        Namespace: AWS/Billing\n        Statistic: Maximum\n        Period: 3600                      # Check every hour\n        EvaluationPeriods: 1\n        Threshold: 25                     # $25 emergency threshold\n        ComparisonOperator: GreaterThanThreshold\n        Dimensions:\n          - Name: Currency\n            Value: USD\n        AlarmActions:\n          - !Ref EmergencyAlarmTopic      # Triggers emergencyShutdown function\n        TreatMissingData: notBreaching",
+    "command": [
+      "offline",
+      "start"
+    ],
+    "options": {
+      "host": "0.0.0.0",
+      "port": "3000"
+    },
+    "orgId": "79a89738-be50-4766-b15f-dad03484351c",
+    "orgName": "fmalafronte",
+    "userId": "dS9TvT74N1ykLFT2vC",
+    "userName": "fmalafronte",
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

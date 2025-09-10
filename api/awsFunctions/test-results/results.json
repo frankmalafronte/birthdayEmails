@@ -1,0 +1,243 @@
+{
+  "config": {
+    "configFile": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/playwright.config.ts",
+    "rootDir": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 4
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "github",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "unit-tests",
+        "name": "unit-tests",
+        "testDir": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "src/**/*/test.ts"
+        ],
+        "timeout": 10000
+      },
+      {
+        "outputDir": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "integration-tests",
+        "name": "integration-tests",
+        "testDir": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "integration/getUsers.test.ts",
+      "file": "integration/getUsers.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "GetUsers API Integration Tests",
+          "file": "integration/getUsers.test.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should return 401 without authorization token",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "integration-tests",
+                  "projectName": "integration-tests",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 353,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-10T18:25:29.007Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00f2096700a1cfa0a2de-4ea13e4bcec8eb07240f",
+              "file": "integration/getUsers.test.ts",
+              "line": 7,
+              "column": 7
+            },
+            {
+              "title": "should return users list with valid authorization",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "integration-tests",
+                  "projectName": "integration-tests",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 364,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-10T18:25:29.011Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00f2096700a1cfa0a2de-359e839af6993f50c044",
+              "file": "integration/getUsers.test.ts",
+              "line": 13,
+              "column": 7
+            },
+            {
+              "title": "should return users with correct structure",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "integration-tests",
+                  "projectName": "integration-tests",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 360,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-10T18:25:29.006Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00f2096700a1cfa0a2de-fd201d546586ed7dfdfa",
+              "file": "integration/getUsers.test.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "should reject non-GET methods",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "integration-tests",
+                  "projectName": "integration-tests",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 349,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-10T18:25:29.016Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00f2096700a1cfa0a2de-6516a2ff8559c24dad7b",
+              "file": "integration/getUsers.test.ts",
+              "line": 69,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-09-10T18:25:28.565Z",
+    "duration": 836.588,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -3,16 +3,23 @@
   "version": "1.0.0",
   "description": "AWS Lambda functions for Birthday Reminder App",
   "main": "dist/index.js",
-  "scripts": {
+"scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist/",
     "deploy": "npm run build && ./scripts/deploy.sh",
     "dev": "npm run build:watch",
-    "test": "jest",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:unit": "playwright test tests/unit",
+    "test:integration": "playwright test tests/integration",
+    "test:api": "playwright test tests/api",
+    "sls:offline": "serverless offline start --host 0.0.0.0 --httpPort 3000",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
-  },
+},
   "dependencies": {
     "aws-sdk": "^2.1691.0",
     "bcryptjs": "^2.4.3",
@@ -20,6 +27,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+        "@playwright/test": "latest",
     "@types/aws-lambda": "latest",
     "@types/bcryptjs": "latest",
     "@types/jsonwebtoken": "latest",

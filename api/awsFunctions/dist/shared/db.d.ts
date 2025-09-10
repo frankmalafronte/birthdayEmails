@@ -1,0 +1,11 @@
+import AWS from 'aws-sdk';
+export declare const dynamodb: AWS.DynamoDB.DocumentClient;
+export declare const USERS_TABLE: string;
+export declare const BIRTHDAYS_TABLE: string;
+export declare const dbGet: (tableName: string, key: any) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.DynamoDB.DocumentClient.GetItemOutput, AWS.AWSError>>;
+export declare const dbPut: (tableName: string, item: any) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError>>;
+export declare const dbQuery: (params: AWS.DynamoDB.DocumentClient.QueryInput) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.DynamoDB.DocumentClient.QueryOutput, AWS.AWSError>>;
+export declare const dbScan: (params: AWS.DynamoDB.DocumentClient.ScanInput) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.DynamoDB.DocumentClient.ScanOutput, AWS.AWSError>>;
+export declare const dbUpdate: (params: AWS.DynamoDB.DocumentClient.UpdateItemInput) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.DynamoDB.DocumentClient.UpdateItemOutput, AWS.AWSError>>;
+export declare const dbDelete: (tableName: string, key: any) => Promise<import("aws-sdk/lib/request").PromiseResult<AWS.DynamoDB.DocumentClient.DeleteItemOutput, AWS.AWSError>>;
+//# sourceMappingURL=db.d.ts.map

@@ -4,19 +4,7 @@ const BASE_URL = process.env.LAMBDA_ENDPOINT || 'http://localhost:3000/dev';
 
 test.describe('CreateUser API Integration Tests', () => {
 
-  // TODO(human) - Implement comprehensive integration tests for createUser endpoint
-  // 1. Test successful user creation (201 status, correct response structure)
-  // 2. Test duplicate email rejection (409 status)  
-  // 3. Test missing request body validation (400 status)
-  // 4. Test response includes user data but excludes password
-  // Remember: your endpoint is POST /dev/auth/register
-
-
-  const BASE_URL = process.env.LAMBDA_ENDPOINT || 'http://localhost:3000/dev';
-  
-  test.describe('CreateUser API Integration Tests', () =>{
-
-
+whno
     const testUser = {
       email:'test@example.com',
       password: 'password123',
@@ -51,6 +39,5 @@ expect(response.status()).toBe(201);
 expect(body.user.email).toBe(email);
 expect(body.user.name).toBe('Test User');
 expect(body.user.password).toBeUndefined(); // Password should NOT be in response
-})
-  })
+  });
 });

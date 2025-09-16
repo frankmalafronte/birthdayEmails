@@ -10,8 +10,10 @@ aws_sdk_1.default.config.update({
     region: process.env.AWS_REGION || 'us-east-1'
 });
 const dynamoDbOptions = isOffline ? {
-    region: 'localhost',
-    endpoint: 'http://localhost:8000'
+    region: 'us-east-1',
+    endpoint: 'http://localhost:8000',
+    accessKeyId: 'test',
+    secretAccessKey: 'test'
 } : {};
 exports.dynamodb = new aws_sdk_1.default.DynamoDB.DocumentClient(dynamoDbOptions);
 exports.USERS_TABLE = process.env.USERS_TABLE || 'birthday-app-users';

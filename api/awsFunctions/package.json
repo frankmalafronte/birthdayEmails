@@ -33,6 +33,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.888.0",
     "@playwright/test": "latest",
     "@types/aws-lambda": "latest",
     "@types/bcryptjs": "latest",

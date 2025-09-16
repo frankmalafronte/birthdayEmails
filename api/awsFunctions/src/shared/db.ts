@@ -10,8 +10,10 @@ AWS.config.update({
 
 // Use local DynamoDB when running offline
 const dynamoDbOptions = isOffline ? {
-  region: 'localhost',
-  endpoint: 'http://localhost:8000'
+  region: 'us-east-1',
+  endpoint: 'http://localhost:8000',
+  accessKeyId: 'test',
+  secretAccessKey: 'test'
 } : {};
 
 export const dynamodb = new AWS.DynamoDB.DocumentClient(dynamoDbOptions);

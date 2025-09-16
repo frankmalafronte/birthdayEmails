@@ -1,18 +1,30 @@
-const AWS = require('aws-sdk');
+const { DynamoDBClient, CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 
 // Configure for local DynamoDB
-const dynamodb = new AWS.DynamoDB({
+const dynamodb = new DynamoDBClient({
   region: 'us-east-1',
-  endpoint: 'http://localhost:8000'
+  endpoint: 'http://localhost:8000',
+  credentials: {
+    accessKeyId: 'test',
+    secretAccessKey: 'test'
+  }
 });
 
 async function createTables() {
   try {
     console.log('Creating DynamoDB tables...');
 
+    const service = 'birthday-app-backend';
+    const stage = 'dev';
+    const usersTableName = `${service}-users-${stage}`;
+    const rateLimitsTableName = `${service}-rate-limits-${stage}`;
+
+    console.log(`Creating users table: ${usersTableName}`);
+    console.log(`Creating rate limits table: ${rateLimitsTableName}`);
+
     // Create Users table
-    await dynamodb.createTable({
-      TableName: 'birthday-app-users-dev',
+    await dynamodb.send(new CreateTableCommand({
+      TableName: usersTableName,
       KeySchema: [
         { AttributeName: 'id', KeyType: 'HASH' }
       ],
@@ -26,17 +38,16 @@ async function createTables() {
           KeySchema: [
             { AttributeName: 'email', KeyType: 'HASH' }
           ],
-          Projection: { ProjectionType: 'KEYS_ONLY' },
-          BillingMode: 'PAY_PER_REQUEST'
+          Projection: { ProjectionType: 'KEYS_ONLY' }
         }
       ],
       BillingMode: 'PAY_PER_REQUEST'
-    }).promise();
+    }));
 
     console.log('✅ Users table created');
 
     // Create Rate Limits table
-    await dynamodb.createTable({
+    await dynamodb.send(new CreateTableCommand({
       TableName: 'birthday-app-backend-rate-limits-dev',
       KeySchema: [
         { AttributeName: 'ip', KeyType: 'HASH' },
@@ -47,16 +58,17 @@ async function createTables() {
         { AttributeName: 'action', AttributeType: 'S' }
       ],
       BillingMode: 'PAY_PER_REQUEST'
-    }).promise();
+    }));
 
     console.log('✅ Rate limits table created');
     console.log('🎉 All tables created successfully!');
 
   } catch (error) {
-    if (error.code === 'ResourceInUseException') {
+    if (error.name === 'ResourceInUseException') {
       console.log('ℹ️  Tables already exist, skipping creation');
     } else {
-      console.error('❌ Error creating tables:', error.message);
+      console.error('❌ Error creating tables:', error);
+      console.error('Full error:', JSON.stringify(error, null, 2));
       process.exit(1);
     }
   }

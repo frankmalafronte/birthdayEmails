@@ -34,36 +34,51 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-const AWS = __importStar(require("aws-sdk"));
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const jwt = __importStar(require("jsonwebtoken"));
 const handler = async (event) => {
     try {
-        const params = {
-            TableName: process.env.USERS_TABLE,
-            ProjectionExpression: 'id, email, #name, createdAt',
-            ExpressionAttributeNames: {
-                '#name': 'name'
+        const token = event.authorizationToken;
+        if (!token) {
+            throw new Error('No authorization token provided');
+        }
+        const cleanToken = token.replace(/^Bearer\s+/, '');
+        const secret = process.env.JWT_SECRET || 'test-secret-key';
+        const decoded = jwt.verify(cleanToken, secret);
+        const policy = {
+            principalId: decoded.sub,
+            policyDocument: {
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: 'execute-api:Invoke',
+                        Effect: 'Allow',
+                        Resource: event.methodArn
+                    }
+                ]
+            },
+            context: {
+                userId: decoded.sub,
+                email: decoded.email
             }
         };
-        const result = await dynamoDB.scan(params).promise();
-        const users = result.Items || [];
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                users,
-                count: users.length
-            })
-        };
+        return policy;
     }
     catch (error) {
-        console.error('Error fetching users:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                error: 'Internal server error',
-                message: 'Failed to fetch users'
-            })
+        console.error('Authorization failed:', error);
+        const policy = {
+            principalId: 'unauthorized',
+            policyDocument: {
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: 'execute-api:Invoke',
+                        Effect: 'Deny',
+                        Resource: event.methodArn
+                    }
+                ]
+            }
         };
+        return policy;
     }
 };
 exports.handler = handler;

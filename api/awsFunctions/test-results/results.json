@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 4
+      "actualWorkers": 3
     },
     "preserveOutput": "always",
     "reporter": [
@@ -41,7 +41,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 4
+          "actualWorkers": 3
         },
         "id": "unit-tests",
         "name": "unit-tests",
@@ -57,7 +57,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 4
+          "actualWorkers": 3
         },
         "id": "integration-tests",
         "name": "integration-tests",
@@ -78,6 +78,97 @@
   },
   "suites": [
     {
+      "title": "integration/createUser.test.ts",
+      "file": "integration/createUser.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "CreateUser API Integration Tests",
+          "file": "integration/createUser.test.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "CreateUser API Integration Tests",
+              "file": "integration/createUser.test.ts",
+              "line": 17,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should create user",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "integration-tests",
+                      "projectName": "integration-tests",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 656,
+                          "error": {
+                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
+                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:50:27",
+                            "location": {
+                              "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
+                              "column": 27,
+                              "line": 50
+                            },
+                            "snippet": "  48 | }\n  49 |\n> 50 | expect(response.status()).toBe(201);\n     |                           ^\n  51 | expect(body.user.email).toBe(email);\n  52 | expect(body.user.name).toBe('Test User');\n  53 | expect(body.user.password).toBeUndefined(); // Password should NOT be in response"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
+                                "column": 27,
+                                "line": 50
+                              },
+                              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n\n  48 | }\n  49 |\n> 50 | expect(response.status()).toBe(201);\n     |                           ^\n  51 | expect(body.user.email).toBe(email);\n  52 | expect(body.user.name).toBe('Test User');\n  53 | expect(body.user.password).toBeUndefined(); // Password should NOT be in response\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:50:27"
+                            }
+                          ],
+                          "stdout": [
+                            {
+                              "text": "Response status: \u001b[33m500\u001b[39m\n"
+                            },
+                            {
+                              "text": "Response body: { success: \u001b[33mfalse\u001b[39m, error: \u001b[32m'Internal server error'\u001b[39m }\n"
+                            }
+                          ],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-09-16T16:05:44.742Z",
+                          "annotations": [],
+                          "attachments": [],
+                          "errorLocation": {
+                            "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
+                            "column": 27,
+                            "line": 50
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "8ef9dd5241a63c8f54e3-4d51e76b7d34cb5d7c03",
+                  "file": "integration/createUser.test.ts",
+                  "line": 26,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "integration/getUsers.test.ts",
       "file": "integration/getUsers.test.ts",
       "column": 0,
@@ -87,7 +178,7 @@
         {
           "title": "GetUsers API Integration Tests",
           "file": "integration/getUsers.test.ts",
-          "line": 5,
+          "line": 6,
           "column": 6,
           "specs": [
             {
@@ -103,15 +194,15 @@
                   "projectName": "integration-tests",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 353,
+                      "duration": 360,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-10T18:25:29.007Z",
+                      "startTime": "2025-09-16T16:05:44.756Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -121,46 +212,12 @@
               ],
               "id": "00f2096700a1cfa0a2de-4ea13e4bcec8eb07240f",
               "file": "integration/getUsers.test.ts",
-              "line": 7,
+              "line": 8,
               "column": 7
             },
             {
               "title": "should return users list with valid authorization",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "integration-tests",
-                  "projectName": "integration-tests",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 364,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-10T18:25:29.011Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "00f2096700a1cfa0a2de-359e839af6993f50c044",
-              "file": "integration/getUsers.test.ts",
-              "line": 13,
-              "column": 7
-            },
-            {
-              "title": "should return users with correct structure",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -173,57 +230,47 @@
                     {
                       "workerIndex": 2,
                       "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 360,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 432,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m401\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m401\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts:23:31",
+                        "location": {
+                          "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
+                          "column": 31,
+                          "line": 23
+                        },
+                        "snippet": "  21 |     });\n  22 |\n> 23 |     expect(response.status()).toBe(200);\n     |                               ^\n  24 |     const body = await response.json();\n  25 |     expect(body.users).toEqual([]);\n  26 |     expect(body.count).toBe(0);"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
+                            "column": 31,
+                            "line": 23
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m401\u001b[39m\n\n  21 |     });\n  22 |\n> 23 |     expect(response.status()).toBe(200);\n     |                               ^\n  24 |     const body = await response.json();\n  25 |     expect(body.users).toEqual([]);\n  26 |     expect(body.count).toBe(0);\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts:23:31"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-10T18:25:29.006Z",
+                      "startTime": "2025-09-16T16:05:44.754Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
+                        "column": 31,
+                        "line": 23
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "00f2096700a1cfa0a2de-fd201d546586ed7dfdfa",
+              "id": "00f2096700a1cfa0a2de-359e839af6993f50c044",
               "file": "integration/getUsers.test.ts",
-              "line": 38,
-              "column": 7
-            },
-            {
-              "title": "should reject non-GET methods",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "integration-tests",
-                  "projectName": "integration-tests",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 349,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-10T18:25:29.016Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "00f2096700a1cfa0a2de-6516a2ff8559c24dad7b",
-              "file": "integration/getUsers.test.ts",
-              "line": 69,
+              "line": 14,
               "column": 7
             }
           ]
@@ -233,11 +280,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-10T18:25:28.565Z",
-    "duration": 836.588,
-    "expected": 4,
+    "startTime": "2025-09-16T16:05:44.259Z",
+    "duration": 1160.374,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 2,
     "flaky": 0
   }
 }

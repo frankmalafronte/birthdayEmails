@@ -34,34 +34,60 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-const AWS = __importStar(require("aws-sdk"));
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const uuid_1 = require("uuid");
+const bcrypt = __importStar(require("bcryptjs"));
+const db_1 = require("../shared/db");
 const handler = async (event) => {
     try {
-        const params = {
-            TableName: process.env.USERS_TABLE,
-            ProjectionExpression: 'id, email, #name, createdAt',
-            ExpressionAttributeNames: {
-                '#name': 'name'
-            }
+        if (!event.body) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'Request body is required'
+                })
+            };
+        }
+        const data = JSON.parse(event.body);
+        if (await (0, db_1.getUserByEmail)(data.email))
+            return {
+                statusCode: 409,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'User with this email already exists'
+                })
+            };
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+        const newUser = {
+            id: (0, uuid_1.v4)(),
+            email: data.email,
+            name: data.name,
+            password: hashedPassword,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
-        const result = await dynamoDB.scan(params).promise();
-        const users = result.Items || [];
+        const dbResponse = await (0, db_1.dbPut)(db_1.USERS_TABLE, newUser);
+        const userResponse = {
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name
+        };
         return {
-            statusCode: 200,
+            statusCode: 201,
             body: JSON.stringify({
-                users,
-                count: users.length
+                success: true,
+                message: 'User created',
+                user: userResponse
             })
         };
     }
     catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error creating user:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({
-                error: 'Internal server error',
-                message: 'Failed to fetch users'
+                success: false,
+                error: 'Internal server error'
             })
         };
     }

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AWS Lambda functions for Birthday Reminder App",
   "main": "dist/index.js",
-"scripts": {
+  "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist/",
@@ -16,18 +16,19 @@
     "test:unit": "playwright test tests/unit",
     "test:integration": "playwright test tests/integration",
     "test:api": "playwright test tests/api",
-    "sls:offline": "serverless offline start --host 0.0.0.0 --httpPort 3000",
+    "sls:offline": "npx serverless offline start --host 0.0.0.0 --httpPort 3000",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
-},
+  },
   "dependencies": {
+    "ajv": "^8.17.1",
     "aws-sdk": "^2.1691.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-        "@playwright/test": "latest",
+    "@playwright/test": "latest",
     "@types/aws-lambda": "latest",
     "@types/bcryptjs": "latest",
     "@types/jsonwebtoken": "latest",
@@ -37,6 +38,8 @@
     "@typescript-eslint/parser": "latest",
     "eslint": "latest",
     "prettier": "latest",
+    "serverless": "^4.19.1",
+    "serverless-dynamodb-local": "^0.2.40",
     "serverless-offline": "^14.4.0",
     "typescript": "latest"
   }

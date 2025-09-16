@@ -6,6 +6,21 @@ useDotenv: true
 plugins:
   - serverless-offline
 
+custom:
+  dynamodb:
+    # Configure DynamoDB Local
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+      seed: false
+      convertEmptyValues: true
+    # Use different endpoints for stages
+    stages:
+      - dev
+
 provider:
   name: aws
   runtime: nodejs18.x
@@ -60,7 +75,7 @@ provider:
 functions:
   # User registration
   createUser:
-    handler: dist/auth/createUser/index.handler
+    handler: dist/src/createUser/index.handler
     description: "Create new user account"
     timeout: 10                           # Short timeout for simple operation
     memorySize: 256                       # Sufficient for user creation
@@ -92,9 +107,6 @@ functions:
           path: birthdays
           method: get
           cors: true
-          authorizer:
-            name: authorizerFunc
-            resultTtlInSeconds: 300
     environment:
       FUNCTION_NAME: findBirthdays
 
@@ -111,9 +123,6 @@ functions:
           path: birthdays
           method: post
           cors: true
-          authorizer:
-            name: authorizerFunc
-            resultTtlInSeconds: 300
     environment:
       FUNCTION_NAME: addBirthday
 
@@ -130,9 +139,6 @@ functions:
           path: birthdays/{id}
           method: delete
           cors: true
-          authorizer:
-            name: authorizerFunc
-            resultTtlInSeconds: 300
     environment:
       FUNCTION_NAME: deleteBirthday
 
@@ -155,6 +161,12 @@ functions:
     environment:
       FUNCTION_NAME: getUsers
 
+  # JWT Authorizer function
+  authorizerFunc:
+    handler: dist/src/auth/authorizer/index.handler
+    description: "JWT token authorizer"
+    timeout: 10
+    memorySize: 128
 
   # 🛡️ CRITICAL: Birthday email job with strict limits
   sendBirthdayEmails:
@@ -176,14 +188,28 @@ functions:
       SES_DAILY_SEND_LIMIT: 200           # 🛡️ Check SES limits
 
 
-  # JWT Authorizer function
-  authorizerFunc:
-    handler: dist/auth/authorizer/index.handler
-    description: "JWT token authorizer"
-    timeout: 10
-    memorySize: 128                       # Minimal memory for JWT validation
+  # 🚨 Emergency shutdown function
+  emergencyShutdown:
+    handler: dist/emergency/shutdown/index.handler
+    description: "EMERGENCY: Disable functions when billing threshold exceeded"
+    timeout: 60
+    memorySize: 256
+    reservedConcurrency: 1
+    # 🔑 This function needs admin permissions to disable other functions
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - lambda:UpdateFunctionConfiguration
+          - lambda:PutProvisionedConcurrencyConfig
+          - apigateway:*
+          - sns:Publish
+        Resource: "*"
+    events:
+      - sns:
+          arn: !Ref EmergencyAlarmTopic
+          topicName: ${self:service}-${self:provider.stage}-emergency-alerts
 
-    resources:
+resources:
   Resources:
     # 🛡️ Much more aggressive billing alarm
     BillingAlarmLow:
@@ -203,25 +229,6 @@ functions:
             Value: USD
         AlarmActions:
           - !Ref BillingAlarmTopic
-
-    # 🛡️ Emergency billing alarm
-    BillingAlarmHigh:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
-        AlarmName: ${self:service}-${self:provider.stage}-billing-alarm-emergency
-        AlarmDescription: "EMERGENCY: Charges exceed $25"
-        MetricName: EstimatedCharges
-        Namespace: AWS/Billing
-        Statistic: Maximum
-        Period: 3600
-        EvaluationPeriods: 1
-        Threshold: 25                     # 🛡️ Emergency at $25
-        ComparisonOperator: GreaterThanThreshold
-        Dimensions:
-          - Name: Currency
-            Value: USD
-        AlarmActions:
-          - !Ref EmergencyAlarmTopic
 
              # 🛡️ Emergency SNS topic (can trigger Lambda to disable functions)
     EmergencyAlarmTopic:
@@ -331,28 +338,6 @@ functions:
             Value: ${self:provider.environment.USERS_TABLE}
         AlarmActions:
           - !Ref BillingAlarmTopic
-
-          # 🚨 Emergency shutdown function
-  emergencyShutdown:
-    handler: dist/emergency/shutdown/index.handler
-    description: "EMERGENCY: Disable functions when billing threshold exceeded"
-    timeout: 60
-    memorySize: 256
-    reservedConcurrency: 1
-    # 🔑 This function needs admin permissions to disable other functions
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - lambda:UpdateFunctionConfiguration
-          - lambda:PutProvisionedConcurrencyConfig
-          - apigateway:*
-          - sns:Publish
-        Resource: "*"
-    events:
-      - sns:
-          arn: !Ref EmergencyAlarmTopic
-          topicName: ${self:service}-${self:provider.stage}-emergency-alerts
-
 
     # 🚨 Enhanced emergency alarm with auto-shutdown
     BillingAlarmHigh:

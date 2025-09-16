@@ -33,37 +33,13 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handler = void 0;
-const AWS = __importStar(require("aws-sdk"));
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const handler = async (event) => {
-    try {
-        const params = {
-            TableName: process.env.USERS_TABLE,
-            ProjectionExpression: 'id, email, #name, createdAt',
-            ExpressionAttributeNames: {
-                '#name': 'name'
-            }
-        };
-        const result = await dynamoDB.scan(params).promise();
-        const users = result.Items || [];
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                users,
-                count: users.length
-            })
-        };
-    }
-    catch (error) {
-        console.error('Error fetching users:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                error: 'Internal server error',
-                message: 'Failed to fetch users'
-            })
-        };
-    }
-};
-exports.handler = handler;
+exports.generateTestJWT = generateTestJWT;
+const jwt = __importStar(require("jsonwebtoken"));
+function generateTestJWT(payload = { sub: 'test-user-123', email: 'test@example.com' }) {
+    const secret = process.env.JWT_SECRET || 'test-secret-key';
+    return jwt.sign({
+        ...payload,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + (60 * 60)
+    }, secret, { algorithm: 'HS256' });
+}

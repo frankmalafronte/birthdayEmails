@@ -5,10 +5,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserByEmail = exports.dbDelete = exports.dbUpdate = exports.dbScan = exports.dbQuery = exports.dbPut = exports.dbGet = exports.BIRTHDAYS_TABLE = exports.USERS_TABLE = exports.dynamodb = void 0;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
+const isOffline = process.env.IS_OFFLINE;
 aws_sdk_1.default.config.update({
     region: process.env.AWS_REGION || 'us-east-1'
 });
-exports.dynamodb = new aws_sdk_1.default.DynamoDB.DocumentClient();
+const dynamoDbOptions = isOffline ? {
+    region: 'localhost',
+    endpoint: 'http://localhost:8000'
+} : {};
+exports.dynamodb = new aws_sdk_1.default.DynamoDB.DocumentClient(dynamoDbOptions);
 exports.USERS_TABLE = process.env.USERS_TABLE || 'birthday-app-users';
 exports.BIRTHDAYS_TABLE = process.env.BIRTHDAYS_TABLE || 'birthday-app-birthdays';
 const dbGet = (tableName, key) => {

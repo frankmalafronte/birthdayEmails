@@ -48,7 +48,7 @@ async function createTables() {
 
     // Create Rate Limits table
     await dynamodb.send(new CreateTableCommand({
-      TableName: 'birthday-app-backend-rate-limits-dev',
+      TableName: rateLimitsTableName,
       KeySchema: [
         { AttributeName: 'ip', KeyType: 'HASH' },
         { AttributeName: 'action', KeyType: 'RANGE' }

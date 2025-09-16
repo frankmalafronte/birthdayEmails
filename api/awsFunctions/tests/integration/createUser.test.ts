@@ -4,8 +4,8 @@ const BASE_URL = process.env.LAMBDA_ENDPOINT || 'http://localhost:3000/dev';
 
 test.describe('CreateUser API Integration Tests', () => {
 
-whno
-    const testUser = {
+
+  const testUser = {
       email:'test@example.com',
       password: 'password123',
       name: 'Test User'

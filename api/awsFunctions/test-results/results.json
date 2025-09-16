@@ -92,7 +92,7 @@
           "specs": [
             {
               "title": "should create user",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -105,49 +105,25 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 879,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:38:27",
-                        "location": {
-                          "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
-                          "column": 27,
-                          "line": 38
-                        },
-                        "snippet": "  36 | }\n  37 |\n> 38 | expect(response.status()).toBe(201);\n     |                           ^\n  39 | expect(body.user.email).toBe(email);\n  40 | expect(body.user.name).toBe('Test User');\n  41 | expect(body.user.password).toBeUndefined(); // Password should NOT be in response"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
-                            "column": 27,
-                            "line": 38
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n\n  36 | }\n  37 |\n> 38 | expect(response.status()).toBe(201);\n     |                           ^\n  39 | expect(body.user.email).toBe(email);\n  40 | expect(body.user.name).toBe('Test User');\n  41 | expect(body.user.password).toBeUndefined(); // Password should NOT be in response\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:38:27"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 470,
+                      "errors": [],
                       "stdout": [
                         {
-                          "text": "Response status: \u001b[33m500\u001b[39m\n"
+                          "text": "Response status: \u001b[33m201\u001b[39m\n"
                         },
                         {
-                          "text": "Response body: { success: \u001b[33mfalse\u001b[39m, error: \u001b[32m'Internal server error'\u001b[39m }\n"
+                          "text": "Response body: {\n  success: \u001b[33mtrue\u001b[39m,\n  message: \u001b[32m'User created'\u001b[39m,\n  user: {\n    id: \u001b[32m'14384f8b-8e6a-4ab0-8e7d-d33a96085bce'\u001b[39m,\n    email: \u001b[32m'test-1758048139279@example.com'\u001b[39m,\n    name: \u001b[32m'Test User'\u001b[39m\n  }\n}\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-16T18:30:38.946Z",
+                      "startTime": "2025-09-16T18:42:19.246Z",
                       "annotations": [],
-                      "attachments": [],
-                      "errorLocation": {
-                        "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
-                        "column": 27,
-                        "line": 38
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "8ef9dd5241a63c8f54e3-8f3b105fa18538c91dae",
@@ -188,12 +164,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 448,
+                      "duration": 355,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-16T18:30:38.969Z",
+                      "startTime": "2025-09-16T18:42:19.260Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -222,7 +198,7 @@
                       "workerIndex": 2,
                       "parallelIndex": 2,
                       "status": "failed",
-                      "duration": 534,
+                      "duration": 429,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m403\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m403\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts:23:31",
@@ -246,7 +222,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-16T18:30:38.960Z",
+                      "startTime": "2025-09-16T18:42:19.260Z",
                       "annotations": [],
                       "attachments": [],
                       "errorLocation": {
@@ -271,11 +247,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-16T18:30:38.479Z",
-    "duration": 1367.438,
-    "expected": 1,
+    "startTime": "2025-09-16T18:42:18.770Z",
+    "duration": 964.8720000000001,
+    "expected": 2,
     "skipped": 0,
-    "unexpected": 2,
+    "unexpected": 1,
     "flaky": 0
   }
 }

@@ -23,44 +23,54 @@ A serverless AWS Lambda-based API for managing birthday reminders and sending au
 
 ## Prerequisites
 
-- Node.js 18+ 
-- Java 17+ (for DynamoDB Local)
-- AWS CLI configured (for deployment)
+- **Node.js** (v18 or higher)
+- **npm** (comes with Node.js)
+- **AWS CLI** (for local DynamoDB access)
 
-## Installation
+### Installing AWS CLI
 
-1. **Clone and install dependencies**:
+**macOS (using Homebrew):**
+```bash
+brew install awscli
+```
+
+**Other platforms:**
+Follow the [AWS CLI Installation Guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+
+## Quick Start
+
+1. **Clone the repository:**
    ```bash
-   npm install
+   git clone <repository-url>
+   cd birthdayEmails/api/awsFunctions
    ```
 
-2. **Install DynamoDB Local**:
+2. **One-time setup:**
    ```bash
-   npx serverless dynamodb install
+   npm run setup
    ```
+   This installs dependencies, configures AWS CLI with dummy credentials, and builds the project.
 
-## Development
-
-### Local Development Setup
-
-1. **Build the TypeScript code**:
+3. **Start the development environment:**
    ```bash
-   npm run build
+   npm run dev:start
    ```
+   This starts DynamoDB Local, creates tables, and runs the serverless offline environment.
 
-2. **Start the development server**:
-   ```bash
-   npm run sls:offline
-   ```
-   This will start:
-   - API Gateway on `http://localhost:3000`
-   - DynamoDB Local on `http://localhost:8000`
-   - All Lambda functions with hot reload
+4. **Your API is now running at:** `http://localhost:3000`
 
-3. **Watch mode for development**:
-   ```bash
-   npm run dev  # Runs TypeScript in watch mode
-   ```
+## Available Scripts
+
+### Development
+- `npm run setup` - One-time setup (install deps, configure AWS, build)
+- `npm run dev:start` - Start the complete development environment
+- `npm run sls:offline` - Start only the serverless offline (requires DynamoDB running)
+- `npm run dynamodb:start` - Start only DynamoDB Local
+- `npm run dynamodb:create-tables` - Create required DynamoDB tables
+
+### Building
+- `npm run build` - Compile TypeScript
+- `npm run build:watch` - Compile TypeScript in watch mode
 
 ### Testing
 

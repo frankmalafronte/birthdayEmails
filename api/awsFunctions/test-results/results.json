@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 3
+      "actualWorkers": 1
     },
     "preserveOutput": "always",
     "reporter": [
@@ -41,7 +41,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 1
         },
         "id": "unit-tests",
         "name": "unit-tests",
@@ -57,7 +57,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 1
         },
         "id": "integration-tests",
         "name": "integration-tests",
@@ -113,44 +113,47 @@
                           "workerIndex": 0,
                           "parallelIndex": 0,
                           "status": "failed",
-                          "duration": 656,
+                          "duration": 10360,
                           "error": {
-                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
-                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:50:27",
+                            "message": "SyntaxError: Unexpected end of JSON input",
+                            "stack": "SyntaxError: Unexpected end of JSON input\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:41:10",
                             "location": {
                               "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
-                              "column": 27,
-                              "line": 50
+                              "column": 10,
+                              "line": 41
                             },
-                            "snippet": "  48 | }\n  49 |\n> 50 | expect(response.status()).toBe(201);\n     |                           ^\n  51 | expect(body.user.email).toBe(email);\n  52 | expect(body.user.name).toBe('Test User');\n  53 | expect(body.user.password).toBeUndefined(); // Password should NOT be in response"
+                            "snippet": "  39 | let body;\n  40 | try {\n> 41 |   body = await response.json();\n     |          ^\n  42 |   console.log('Response body:', body);\n  43 | } catch (error) {\n  44 |   console.log('Failed to parse response as JSON:', error.message);"
                           },
                           "errors": [
                             {
                               "location": {
                                 "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
-                                "column": 27,
-                                "line": 50
+                                "column": 10,
+                                "line": 41
                               },
-                              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n\n  48 | }\n  49 |\n> 50 | expect(response.status()).toBe(201);\n     |                           ^\n  51 | expect(body.user.email).toBe(email);\n  52 | expect(body.user.name).toBe('Test User');\n  53 | expect(body.user.password).toBeUndefined(); // Password should NOT be in response\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:50:27"
+                              "message": "SyntaxError: Unexpected end of JSON input\n\n  39 | let body;\n  40 | try {\n> 41 |   body = await response.json();\n     |          ^\n  42 |   console.log('Response body:', body);\n  43 | } catch (error) {\n  44 |   console.log('Failed to parse response as JSON:', error.message);\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts:41:10"
                             }
                           ],
                           "stdout": [
                             {
-                              "text": "Response status: \u001b[33m500\u001b[39m\n"
+                              "text": "Response status: \u001b[33m504\u001b[39m\n"
                             },
                             {
-                              "text": "Response body: { success: \u001b[33mfalse\u001b[39m, error: \u001b[32m'Internal server error'\u001b[39m }\n"
+                              "text": "Failed to parse response as JSON: Unexpected end of JSON input\n"
+                            },
+                            {
+                              "text": "Raw response body: \n"
                             }
                           ],
                           "stderr": [],
                           "retry": 0,
-                          "startTime": "2025-09-16T16:05:44.742Z",
+                          "startTime": "2025-09-16T16:26:30.700Z",
                           "annotations": [],
                           "attachments": [],
                           "errorLocation": {
                             "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/createUser.test.ts",
-                            "column": 27,
-                            "line": 50
+                            "column": 10,
+                            "line": 41
                           }
                         }
                       ],
@@ -167,124 +170,15 @@
           ]
         }
       ]
-    },
-    {
-      "title": "integration/getUsers.test.ts",
-      "file": "integration/getUsers.test.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "GetUsers API Integration Tests",
-          "file": "integration/getUsers.test.ts",
-          "line": 6,
-          "column": 6,
-          "specs": [
-            {
-              "title": "should return 401 without authorization token",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "integration-tests",
-                  "projectName": "integration-tests",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 360,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-16T16:05:44.756Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "00f2096700a1cfa0a2de-4ea13e4bcec8eb07240f",
-              "file": "integration/getUsers.test.ts",
-              "line": 8,
-              "column": 7
-            },
-            {
-              "title": "should return users list with valid authorization",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "integration-tests",
-                  "projectName": "integration-tests",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "failed",
-                      "duration": 432,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m401\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m401\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts:23:31",
-                        "location": {
-                          "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
-                          "column": 31,
-                          "line": 23
-                        },
-                        "snippet": "  21 |     });\n  22 |\n> 23 |     expect(response.status()).toBe(200);\n     |                               ^\n  24 |     const body = await response.json();\n  25 |     expect(body.users).toEqual([]);\n  26 |     expect(body.count).toBe(0);"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
-                            "column": 31,
-                            "line": 23
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m401\u001b[39m\n\n  21 |     });\n  22 |\n> 23 |     expect(response.status()).toBe(200);\n     |                               ^\n  24 |     const body = await response.json();\n  25 |     expect(body.users).toEqual([]);\n  26 |     expect(body.count).toBe(0);\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts:23:31"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-16T16:05:44.754Z",
-                      "annotations": [],
-                      "attachments": [],
-                      "errorLocation": {
-                        "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
-                        "column": 31,
-                        "line": 23
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "00f2096700a1cfa0a2de-359e839af6993f50c044",
-              "file": "integration/getUsers.test.ts",
-              "line": 14,
-              "column": 7
-            }
-          ]
-        }
-      ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-16T16:05:44.259Z",
-    "duration": 1160.374,
-    "expected": 1,
+    "startTime": "2025-09-16T16:26:30.361Z",
+    "duration": 10723.603,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 2,
+    "unexpected": 1,
     "flaky": 0
   }
 }

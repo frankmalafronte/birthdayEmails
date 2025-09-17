@@ -91,4 +91,37 @@ test.describe('CreateUser API Integration Tests', () => {
     })
     expect(secondResponse.status()).toBe(409);
   })
+  test('should reject a request with no body',async  ({request}) =>{
+const response = await request.post(`${BASE_URL}/auth/register`, {
+        data: {}
+      })
+      expect(response.status()).toBe(400)
+  })
+  test('should reject a request lacking an email',async  ({request}) =>{
+const response = await request.post(`${BASE_URL}/auth/register`, {
+        data: {
+          password:'123456789',
+          name:'test'
+        }
+      })
+      expect(response.status()).toBe(400);
+
+      const bodyText = await response.text();
+      expect(bodyText).toContain('requires property');
+      expect(bodyText).toContain('email');
+  })
+    test('should reject a request with a short password',async  ({request}) =>{
+const response = await request.post(`${BASE_URL}/auth/register`, {
+        data: {
+          email:"shortpassword@email.com",
+          password:'123',
+          name:'test'
+        }
+      })
+      expect(response.status()).toBe(400);
+
+      const bodyText = await response.text();
+      expect(bodyText).toContain('does not meet minimum length of 8');
+  })
+  
 });

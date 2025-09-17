@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 3
+      "actualWorkers": 4
     },
     "preserveOutput": "always",
     "reporter": [
@@ -41,7 +41,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
         "id": "unit-tests",
         "name": "unit-tests",
@@ -57,7 +57,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
         "id": "integration-tests",
         "name": "integration-tests",
@@ -87,7 +87,7 @@
         {
           "title": "CreateUser API Integration Tests",
           "file": "integration/createUser.test.ts",
-          "line": 5,
+          "line": 33,
           "column": 6,
           "specs": [
             {
@@ -106,19 +106,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 470,
+                      "duration": 465,
                       "errors": [],
-                      "stdout": [
-                        {
-                          "text": "Response status: \u001b[33m201\u001b[39m\n"
-                        },
-                        {
-                          "text": "Response body: {\n  success: \u001b[33mtrue\u001b[39m,\n  message: \u001b[32m'User created'\u001b[39m,\n  user: {\n    id: \u001b[32m'14384f8b-8e6a-4ab0-8e7d-d33a96085bce'\u001b[39m,\n    email: \u001b[32m'test-1758048139279@example.com'\u001b[39m,\n    name: \u001b[32m'Test User'\u001b[39m\n  }\n}\n"
-                        }
-                      ],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-16T18:42:19.246Z",
+                      "startTime": "2025-09-17T15:32:43.757Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -128,8 +121,42 @@
               ],
               "id": "8ef9dd5241a63c8f54e3-8f3b105fa18538c91dae",
               "file": "integration/createUser.test.ts",
-              "line": 14,
-              "column": 9
+              "line": 45,
+              "column": 7
+            },
+            {
+              "title": "should reject duplicate user with 409 status",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "integration-tests",
+                  "projectName": "integration-tests",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 467,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-17T15:32:43.762Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ef9dd5241a63c8f54e3-4f04edf0e185aee10010",
+              "file": "integration/createUser.test.ts",
+              "line": 69,
+              "column": 7
             }
           ]
         }
@@ -161,15 +188,15 @@
                   "projectName": "integration-tests",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 355,
+                      "duration": 366,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-16T18:42:19.260Z",
+                      "startTime": "2025-09-17T15:32:43.705Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -195,10 +222,10 @@
                   "projectName": "integration-tests",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
                       "status": "failed",
-                      "duration": 429,
+                      "duration": 389,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m403\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m403\u001b[39m\n    at /Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts:23:31",
@@ -222,9 +249,15 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-16T18:42:19.260Z",
+                      "startTime": "2025-09-17T15:32:43.702Z",
                       "annotations": [],
-                      "attachments": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/test-results/getUsers-GetUsers-API-Inte-2565c-st-with-valid-authorization-integration-tests/trace.zip"
+                        }
+                      ],
                       "errorLocation": {
                         "file": "/Users/frank/Projects/birthdayEmails/api/awsFunctions/tests/integration/getUsers.test.ts",
                         "column": 31,
@@ -247,9 +280,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-16T18:42:18.770Z",
-    "duration": 964.8720000000001,
-    "expected": 2,
+    "startTime": "2025-09-17T15:32:43.141Z",
+    "duration": 1110.739,
+    "expected": 3,
     "skipped": 0,
     "unexpected": 1,
     "flaky": 0

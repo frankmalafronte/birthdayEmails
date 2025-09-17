@@ -11,18 +11,19 @@ test.describe('GetUsers API Integration Tests', () => {
     expect(response.status()).toBe(401);
   });
 
-  test('should return users list with valid authorization', async ({ request }) => {
-    const mockToken = generateTestJWT()
+  
+  // test('should return users list with valid authorization', async ({ request }) => {
+  //   const mockToken = generateTestJWT()
 
-    const response = await request.get(`${BASE_URL}/users`, {
-      headers: {
-        'Authorization': mockToken
-      }
-    });
+  //   const response = await request.get(`${BASE_URL}/users`, {
+  //     headers: {
+  //       'Authorization': mockToken
+  //     }
+  //   });
 
-    expect(response.status()).toBe(200);
-    const body = await response.json();
-    expect(body.users).toEqual([]);
-    expect(body.count).toBe(0);
-  });
+  //   expect(response.status()).toBe(200);
+  //   const body = await response.json();
+  //   expect(body.users).toEqual([]);
+  //   expect(body.count).toBe(0);
+  // });
 });

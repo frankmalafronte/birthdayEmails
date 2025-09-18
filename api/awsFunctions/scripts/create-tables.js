@@ -17,10 +17,10 @@ async function createTables() {
     const service = 'birthday-app-backend';
     const stage = 'dev';
     const usersTableName = `${service}-users-${stage}`;
-    const rateLimitsTableName = `${service}-rate-limits-${stage}`;
+    const birthdaysTableName = `${service}-birthdays-${stage}`;
 
     console.log(`Creating users table: ${usersTableName}`);
-    console.log(`Creating rate limits table: ${rateLimitsTableName}`);
+    console.log(`Creating birthdays table: ${birthdaysTableName}`);
 
     // Create Users table
     await dynamodb.send(new CreateTableCommand({
@@ -46,28 +46,36 @@ async function createTables() {
 
     console.log('✅ Users table created');
 
-    // Create Rate Limits table
+    // Create Birthdays table
     await dynamodb.send(new CreateTableCommand({
-      TableName: rateLimitsTableName,
+      TableName: birthdaysTableName,
       KeySchema: [
-        { AttributeName: 'ip', KeyType: 'HASH' },
-        { AttributeName: 'action', KeyType: 'RANGE' }
+        { AttributeName: 'id', KeyType: 'HASH' }
       ],
       AttributeDefinitions: [
-        { AttributeName: 'ip', AttributeType: 'S' },
-        { AttributeName: 'action', AttributeType: 'S' }
+        { AttributeName: 'id', AttributeType: 'S' },
+        { AttributeName: 'userId', AttributeType: 'S' }
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'UserIdIndex',
+          KeySchema: [
+            { AttributeName: 'userId', KeyType: 'HASH' }
+          ],
+          Projection: { ProjectionType: 'ALL' }
+        }
       ],
       BillingMode: 'PAY_PER_REQUEST'
     }));
 
-    console.log('✅ Rate limits table created');
+    console.log('✅ Birthdays table created');
     console.log('🎉 All tables created successfully!');
 
   } catch (error) {
+    console.error('❌ Error creating tables:', error.name, error.message);
     if (error.name === 'ResourceInUseException') {
       console.log('ℹ️  Tables already exist, skipping creation');
     } else {
-      console.error('❌ Error creating tables:', error);
       console.error('Full error:', JSON.stringify(error, null, 2));
       process.exit(1);
     }

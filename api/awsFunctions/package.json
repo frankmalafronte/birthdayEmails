@@ -14,7 +14,7 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:unit": "playwright test tests/unit",
-    "test:integration": "IS_OFFLINE=true playwright test tests/integration",
+    "test:integration": "playwright test tests/integration",
     "test:api": "playwright test tests/api",
     "sls:offline": "IS_OFFLINE=true npx serverless offline start --host 0.0.0.0 --httpPort 3000",
     "dynamodb:start": "node -e \"const DynamoDbLocal = require('dynamodb-local'); DynamoDbLocal.launch(8000, null, ['-inMemory'], false);\"",
@@ -26,6 +26,7 @@
     "format": "prettier --write src/**/*.ts"
   },
   "dependencies": {
+    "@aws-sdk/lib-dynamodb": "^3.891.0",
     "ajv": "^8.17.1",
     "aws-sdk": "^2.1691.0",
     "bcryptjs": "^2.4.3",
@@ -43,6 +44,7 @@
     "@typescript-eslint/eslint-plugin": "latest",
     "@typescript-eslint/parser": "latest",
     "concurrently": "^9.2.1",
+    "dotenv": "^17.2.2",
     "dynamodb-local": "^0.0.35",
     "eslint": "latest",
     "prettier": "latest",

@@ -1,69 +1,84 @@
 // aws-functions/src/shared/db.ts
-import AWS from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  UpdateCommand,
+  DeleteCommand
+} from '@aws-sdk/lib-dynamodb';
 
-// Configure AWS SDK
+// Configure AWS SDK v3
 const isOffline = process.env.IS_OFFLINE;
 
-AWS.config.update({
-  region: process.env.AWS_REGION || 'us-east-1'
+// Create DynamoDB client
+const client = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'us-east-1',
+  ...(isOffline && {
+    endpoint: 'http://localhost:8000',
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    }
+  })
 });
 
-// Use local DynamoDB when running offline
-const dynamoDbOptions = isOffline ? {
-  region: 'us-east-1',
-  endpoint: 'http://localhost:8000',
-  accessKeyId: 'test',
-  secretAccessKey: 'test'
-} : {};
+// Create Document client for easier operations
+export const dynamodb = DynamoDBDocumentClient.from(client);
 
-export const dynamodb = new AWS.DynamoDB.DocumentClient(dynamoDbOptions);
-
-// Table names from environment variables
-export const USERS_TABLE = process.env.USERS_TABLE || 'birthday-app-users';
-export const BIRTHDAYS_TABLE = process.env.BIRTHDAYS_TABLE || 'birthday-app-birthdays';
-
+// Table names from environment variables (set by serverless.yml)
+export const USERS_TABLE = process.env.USERS_TABLE!;
+export const BIRTHDAYS_TABLE = process.env.BIRTHDAYS_TABLE!;
 // Helper functions
-export const dbGet = (tableName: string, key: any) => {
-  return dynamodb.get({
+export const dbGet = async (tableName: string, key: any) => {
+  const command = new GetCommand({
     TableName: tableName,
     Key: key
-  }).promise();
+  });
+  return dynamodb.send(command);
 };
 
-export const dbPut = (tableName: string, item: any) => {
-  return dynamodb.put({
+export const dbPut = async (tableName: string, item: any) => {
+  const command = new PutCommand({
     TableName: tableName,
     Item: item
-  }).promise();
+  });
+  return dynamodb.send(command);
 };
 
-export const dbQuery = (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
-  return dynamodb.query(params).promise();
+export const dbQuery = async (params: any) => {
+  const command = new QueryCommand(params);
+  return dynamodb.send(command);
 };
 
-export const dbScan = (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
-  return dynamodb.scan(params).promise();
+export const dbScan = async (params: any) => {
+  const command = new ScanCommand(params);
+  return dynamodb.send(command);
 };
 
-export const dbUpdate = (params: AWS.DynamoDB.DocumentClient.UpdateItemInput) => {
-  return dynamodb.update(params).promise();
+export const dbUpdate = async (params: any) => {
+  const command = new UpdateCommand(params);
+  return dynamodb.send(command);
 };
 
-export const dbDelete = (tableName: string, key: any) => {
-  return dynamodb.delete({
+export const dbDelete = async (tableName: string, key: any) => {
+  const command = new DeleteCommand({
     TableName: tableName,
     Key: key
-  }).promise();
+  });
+  return dynamodb.send(command);
 };
 
 export const getUserByEmail = async (email: string) => {
-    const result = await dbQuery({
-      TableName: USERS_TABLE,
-      IndexName: 'EmailIndex',
-      KeyConditionExpression: 'email = :email',
-      ExpressionAttributeValues: {
-        ':email': email
-      }
-    });
-    return result.Items && result.Items.length > 0 ? result.Items[0] : null;
-  };
+  const result = await dbQuery({
+    TableName: USERS_TABLE,
+    IndexName: 'EmailIndex',
+    KeyConditionExpression: 'email = :email',
+    ExpressionAttributeValues: {
+      ':email': email
+    }
+  });
+  return result.Items && result.Items.length > 0 ? result.Items[0] : null;
+};

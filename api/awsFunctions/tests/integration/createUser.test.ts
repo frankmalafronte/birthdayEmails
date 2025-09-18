@@ -1,20 +1,13 @@
 import { test, expect } from '@playwright/test';
-import { DynamoDBClient, ScanCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
+import { ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { dynamodb } from '../../src/shared/db';
+import { APIGatewayProxyEvent } from 'aws-lambda';
+import { handler as createUser}  from '../../src/createUser/index';
 
-const BASE_URL = process.env.LAMBDA_ENDPOINT || 'http://localhost:3000/dev';
-
-// Configure DynamoDB for local testing
-const dynamodb = new DynamoDBClient({
-  region: 'us-east-1',
-  endpoint: 'http://localhost:8000',
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  }
-});
 
 async function clearUsersTable() {
-  const tableName = 'birthday-app-backend-users-dev';
+  const tableName = process.env.USERS_TABLE!;
+  console.log('Trying to clear table:', tableName);
 
   // Scan all items
   const scanCommand = new ScanCommand({ TableName: tableName });
@@ -22,7 +15,7 @@ async function clearUsersTable() {
 
   // Delete each item
   for (const item of result.Items || []) {
-    const deleteCommand = new DeleteItemCommand({
+    const deleteCommand = new DeleteCommand({
       TableName: tableName,
       Key: { id: item.id }
     });
@@ -40,88 +33,156 @@ test.describe('CreateUser API Integration Tests', () => {
     email: 'test@example.com',
     password: 'password123',
     name: 'Test User'
-  }
+  };
 
-  test('should create user', async ({ request }) => {
-    const email = `test-${Date.now()}@example.com`
-    const response = await request.post(`${BASE_URL}/auth/register`, {
-      data: {
+  test('should create user', async () => {
+    const email = `test-${Date.now()}@example.com`;
+
+    const event: APIGatewayProxyEvent = {
+      body: JSON.stringify({
         ...testUser,
         email: email
-      }
-    })
+      }),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
 
+    const response = await createUser(event);
 
-    let body;
-    try {
-      body = await response.json();
-    } catch (error) {
-      const textBody = await response.text();
-      throw error;
+    // Debug: Log response if not 201
+    if (response.statusCode !== 201) {
+      console.log('Response status:', response.statusCode);
+      console.log('Response body:', response.body);
     }
 
-    expect(response.status()).toBe(201);
+    const body = JSON.parse(response.body);
+
+    expect(response.statusCode).toBe(201);
     expect(body.user.email).toBe(email);
     expect(body.user.name).toBe('Test User');
     expect(body.user.password).toBeUndefined(); // Password should NOT be in response
   });
 
-  test('should reject duplicate user with 409 status', async ({ request }) => {
-    // Create User
-     const duplicateUser = {
-    email: 'duplicateUser@example.com',
-    password: 'password123',
-    name: 'Test User'
-     }
-      const response = await request.post(`${BASE_URL}/auth/register`, {
-        data: {
-          ...duplicateUser,
-        }
-      })
+  test('should reject duplicate user with 409 status', async () => {
+    const duplicateUser = {
+      email: 'duplicateUser@example.com',
+      password: 'password123',
+      name: 'Test User'
+    };
 
-      const body = await response.json()
-        expect(response.status()).toBe(201);
+    // Create user first
+    const firstEvent: APIGatewayProxyEvent = {
+      body: JSON.stringify(duplicateUser),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
 
+    const response = await createUser(firstEvent);
+    expect(response.statusCode).toBe(201);
 
-    // Send the same user again
-    const secondResponse = await request.post(`${BASE_URL}/auth/register`, {
-      data: {
-        ...duplicateUser,
-      }
-    })
-    expect(secondResponse.status()).toBe(409);
-  })
-  test('should reject a request with no body',async  ({request}) =>{
-const response = await request.post(`${BASE_URL}/auth/register`, {
-        data: {}
-      })
-      expect(response.status()).toBe(400)
-  })
-  test('should reject a request lacking an email',async  ({request}) =>{
-const response = await request.post(`${BASE_URL}/auth/register`, {
-        data: {
-          password:'123456789',
-          name:'test'
-        }
-      })
-      expect(response.status()).toBe(400);
+    // Try to create same user again
+    const secondEvent: APIGatewayProxyEvent = {
+      body: JSON.stringify(duplicateUser),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
 
-      const bodyText = await response.text();
-      expect(bodyText).toContain('requires property');
-      expect(bodyText).toContain('email');
-  })
-    test('should reject a request with a short password',async  ({request}) =>{
-const response = await request.post(`${BASE_URL}/auth/register`, {
-        data: {
-          email:"shortpassword@email.com",
-          password:'123',
-          name:'test'
-        }
-      })
-      expect(response.status()).toBe(400);
+    const secondResponse = await createUser(secondEvent);
+    expect(secondResponse.statusCode).toBe(409);
+  });
+  test('should reject a request with no body', async () => {
+    const event: APIGatewayProxyEvent = {
+      body: null,
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
 
-      const bodyText = await response.text();
-      expect(bodyText).toContain('does not meet minimum length of 8');
-  })
+    const response = await createUser(event);
+    expect(response.statusCode).toBe(400);
+  });
+  test('should reject a request lacking an email', async () => {
+    const event: APIGatewayProxyEvent = {
+      body: JSON.stringify({
+        password: '123456789',
+        name: 'test'
+      }),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
+
+    const response = await createUser(event);
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toContain('requires property');
+    expect(response.body).toContain('email');
+  });
+  test('should reject a request with a short password', async () => {
+    const event: APIGatewayProxyEvent = {
+      body: JSON.stringify({
+        email: 'shortpassword@email.com',
+        password: '123',
+        name: 'test'
+      }),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
+
+    const response = await createUser(event);
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toContain('does not meet minimum length of 8');
+  });
   
 });

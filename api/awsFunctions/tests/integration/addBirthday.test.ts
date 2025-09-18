@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DynamoDBClient, ScanCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 
+
 const BASE_URL = process.env.LAMBDA_ENDPOINT || 'http://localhost:3000/dev';
 
 // Configure DynamoDB for local testing
@@ -47,5 +48,8 @@ test.describe('AddBirthday API Integration Tests', () => {
   // 3. Test invalid date format validation (400 status)
   // 4. Test response includes birthday data with generated ID
   // Remember: your endpoint is POST /dev/birthdays
+
+  test('it should add a birthday to a user.')
+
 
 });

@@ -1,32 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { dynamodb } from '../../src/shared/db';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler as createUser}  from '../../src/createUser/index';
-
-
-async function clearUsersTable() {
-  const tableName = process.env.USERS_TABLE!;
-  console.log('Trying to clear table:', tableName);
-
-  // Scan all items
-  const scanCommand = new ScanCommand({ TableName: tableName });
-  const result = await dynamodb.send(scanCommand);
-
-  // Delete each item
-  for (const item of result.Items || []) {
-    const deleteCommand = new DeleteCommand({
-      TableName: tableName,
-      Key: { id: item.id }
-    });
-    await dynamodb.send(deleteCommand);
-  }
-}
+import { clearTable } from '../helpers/testHelpers';
 
 test.describe('CreateUser API Integration Tests', () => {
 
   test.beforeEach(async () => {
-    await clearUsersTable();
+    await clearTable(process.env.USERS_TABLE!);
   });
 
   const testUser = {
@@ -36,12 +16,10 @@ test.describe('CreateUser API Integration Tests', () => {
   };
 
   test('should create user', async () => {
-    const email = `test-${Date.now()}@example.com`;
 
     const event: APIGatewayProxyEvent = {
       body: JSON.stringify({
         ...testUser,
-        email: email
       }),
       headers: {},
       multiValueHeaders: {},
@@ -67,8 +45,8 @@ test.describe('CreateUser API Integration Tests', () => {
     const body = JSON.parse(response.body);
 
     expect(response.statusCode).toBe(201);
-    expect(body.user.email).toBe(email);
-    expect(body.user.name).toBe('Test User');
+    expect(body.user.email).toBe(testUser.email);
+    expect(body.user.name).toBe(testUser.name);
     expect(body.user.password).toBeUndefined(); // Password should NOT be in response
   });
 

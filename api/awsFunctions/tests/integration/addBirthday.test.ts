@@ -1,55 +1,84 @@
 import { test, expect } from '@playwright/test';
-import { DynamoDBClient, ScanCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
-
-
-const BASE_URL = process.env.LAMBDA_ENDPOINT || 'http://localhost:3000/dev';
-
-// Configure DynamoDB for local testing
-const dynamodb = new DynamoDBClient({
-  region: 'us-east-1',
-  endpoint: 'http://localhost:8000',
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  }
-});
-
-async function clearBirthdaysTable() {
-  const tableName = 'birthday-app-backend-birthdays-dev';
-
-  // Scan all items
-  const scanCommand = new ScanCommand({ TableName: tableName });
-  const result = await dynamodb.send(scanCommand);
-
-  // Delete each item
-  for (const item of result.Items || []) {
-    const deleteCommand = new DeleteItemCommand({
-      TableName: tableName,
-      Key: { id: item.id }
-    });
-    await dynamodb.send(deleteCommand);
-  }
-}
+import { APIGatewayProxyEvent } from 'aws-lambda';
+import { clearTable, createTestUser } from '../helpers/testHelpers';
 
 test.describe('AddBirthday API Integration Tests', () => {
 
   test.beforeEach(async () => {
-    await clearBirthdaysTable();
+    await clearTable(process.env.BIRTHDAYS_TABLE!);
+    await createTestUser();
   });
 
   const testBirthday = {
     name: 'John Doe',
-    birthDate: '1990-06-15'
+    birthDate: '1990-06-15',
+    userEmail: 'test@example.com'
   };
 
-  // TODO(human) - Add comprehensive tests for addBirthday endpoint
-  // 1. Test successful birthday creation (201 status, correct response structure)
-  // 2. Test missing required fields validation (400 status)
-  // 3. Test invalid date format validation (400 status)
-  // 4. Test response includes birthday data with generated ID
-  // Remember: your endpoint is POST /dev/birthdays
+  test('should add a birthday successfully', async () => {
+    try {
+      const { handler: addBirthday } = await import('../../src/addBirthday/index');
 
-  test('it should add a birthday to a user.')
+      const event: APIGatewayProxyEvent = {
+        body: JSON.stringify(testBirthday),
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'POST',
+        isBase64Encoded: false,
+        path: '/dev/birthdays',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: ''
+      };
 
+      const response = await addBirthday(event);
+
+      console.log('Response status:', response.statusCode);
+      console.log('Response body:', response.body);
+
+      expect(response.statusCode).toBe(201);
+
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.birthday.name).toBe(testBirthday.name);
+      expect(body.birthday.birthDate).toBe(testBirthday.birthDate);
+      expect(body.birthday.userEmail).toBe(testBirthday.userEmail);
+      expect(body.birthday.id).toBeDefined();
+    } catch (error) {
+      console.error('Test error:', error);
+      throw error;
+    }
+  });
+
+  test('should reject request with missing fields', async () => {
+    const { handler: addBirthday } = await import('../../src/addBirthday/index');
+
+    const event: APIGatewayProxyEvent = {
+      body: JSON.stringify({
+        name: 'John Doe'
+        // Missing birthDate and userEmail
+      }),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/dev/birthdays',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
+
+    const response = await addBirthday(event);
+
+    expect(response.statusCode).toBe(400);
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(false);
+  });
 
 });

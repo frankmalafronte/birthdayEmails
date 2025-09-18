@@ -6,14 +6,7 @@ import { User, UserResponse, RegisterRequest } from '../shared/types';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    // TODO(human) - Implement user creation logic:
-    // 1. Parse and validate the request body (RegisterRequest)
-    // 2. Check if user with email already exists
-    // 3. Hash the password with bcrypt
-    // 4. Create user object with ID and timestamps
-    // 5. Save to database
-    // 6. Return success response with UserResponse (no password)
-
+   
    if (!event.body) {
         return {
       statusCode: 400,

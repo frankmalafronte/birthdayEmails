@@ -49,6 +49,42 @@ const handler = async (event) => {
             };
         }
         const data = JSON.parse(event.body);
+        if (!data.email) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'requires property "email"'
+                })
+            };
+        }
+        if (!data.password) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'requires property "password"'
+                })
+            };
+        }
+        if (!data.name) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'requires property "name"'
+                })
+            };
+        }
+        if (data.password.length < 8) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'password does not meet minimum length of 8'
+                })
+            };
+        }
         if (await (0, db_1.getUserByEmail)(data.email))
             return {
                 statusCode: 409,

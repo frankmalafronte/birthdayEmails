@@ -38,7 +38,7 @@ async function createTables() {
           KeySchema: [
             { AttributeName: 'email', KeyType: 'HASH' }
           ],
-          Projection: { ProjectionType: 'KEYS_ONLY' }
+          Projection: { ProjectionType: 'ALL' }
         }
       ],
       BillingMode: 'PAY_PER_REQUEST'

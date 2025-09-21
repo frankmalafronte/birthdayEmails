@@ -1,54 +1,59 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserByEmail = exports.dbDelete = exports.dbUpdate = exports.dbScan = exports.dbQuery = exports.dbPut = exports.dbGet = exports.BIRTHDAYS_TABLE = exports.USERS_TABLE = exports.dynamodb = void 0;
-const aws_sdk_1 = __importDefault(require("aws-sdk"));
+const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const isOffline = process.env.IS_OFFLINE;
-aws_sdk_1.default.config.update({
-    region: process.env.AWS_REGION || 'us-east-1'
+const client = new client_dynamodb_1.DynamoDBClient({
+    region: process.env.AWS_REGION || 'us-east-1',
+    ...(isOffline && {
+        endpoint: 'http://localhost:8000',
+        credentials: {
+            accessKeyId: 'test',
+            secretAccessKey: 'test'
+        }
+    })
 });
-const dynamoDbOptions = isOffline ? {
-    region: 'us-east-1',
-    endpoint: 'http://localhost:8000',
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-} : {};
-exports.dynamodb = new aws_sdk_1.default.DynamoDB.DocumentClient(dynamoDbOptions);
-exports.USERS_TABLE = process.env.USERS_TABLE || 'birthday-app-users';
-exports.BIRTHDAYS_TABLE = process.env.BIRTHDAYS_TABLE || 'birthday-app-birthdays';
-const dbGet = (tableName, key) => {
-    return exports.dynamodb.get({
+exports.dynamodb = lib_dynamodb_1.DynamoDBDocumentClient.from(client);
+exports.USERS_TABLE = process.env.USERS_TABLE;
+exports.BIRTHDAYS_TABLE = process.env.BIRTHDAYS_TABLE;
+const dbGet = async (tableName, key) => {
+    const command = new lib_dynamodb_1.GetCommand({
         TableName: tableName,
         Key: key
-    }).promise();
+    });
+    return exports.dynamodb.send(command);
 };
 exports.dbGet = dbGet;
-const dbPut = (tableName, item) => {
-    return exports.dynamodb.put({
+const dbPut = async (tableName, item) => {
+    const command = new lib_dynamodb_1.PutCommand({
         TableName: tableName,
         Item: item
-    }).promise();
+    });
+    return exports.dynamodb.send(command);
 };
 exports.dbPut = dbPut;
-const dbQuery = (params) => {
-    return exports.dynamodb.query(params).promise();
+const dbQuery = async (params) => {
+    const command = new lib_dynamodb_1.QueryCommand(params);
+    return exports.dynamodb.send(command);
 };
 exports.dbQuery = dbQuery;
-const dbScan = (params) => {
-    return exports.dynamodb.scan(params).promise();
+const dbScan = async (params) => {
+    const command = new lib_dynamodb_1.ScanCommand(params);
+    return exports.dynamodb.send(command);
 };
 exports.dbScan = dbScan;
-const dbUpdate = (params) => {
-    return exports.dynamodb.update(params).promise();
+const dbUpdate = async (params) => {
+    const command = new lib_dynamodb_1.UpdateCommand(params);
+    return exports.dynamodb.send(command);
 };
 exports.dbUpdate = dbUpdate;
-const dbDelete = (tableName, key) => {
-    return exports.dynamodb.delete({
+const dbDelete = async (tableName, key) => {
+    const command = new lib_dynamodb_1.DeleteCommand({
         TableName: tableName,
         Key: key
-    }).promise();
+    });
+    return exports.dynamodb.send(command);
 };
 exports.dbDelete = dbDelete;
 const getUserByEmail = async (email) => {

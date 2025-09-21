@@ -1,12 +1,36 @@
 import { test, expect } from '@playwright/test';
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { clearTable, createTestUser } from '../helpers/testHelpers';
+import { clearTable } from '../helpers/testHelpers';
+import { handler as createUser } from '../../src/createUser/index';
+import { handler as addBirthday } from '../../src/addBirthday/index';
 
 test.describe('AddBirthday API Integration Tests', () => {
 
   test.beforeEach(async () => {
     await clearTable(process.env.BIRTHDAYS_TABLE!);
-    await createTestUser();
+    await clearTable(process.env.USERS_TABLE!);
+
+    // Create test user
+    const createUserEvent: APIGatewayProxyEvent = {
+      body: JSON.stringify({
+        email: 'test@example.com',
+        password: 'password123',
+        name: 'Test User'
+      }),
+      headers: {},
+      multiValueHeaders: {},
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/auth/register',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: ''
+    };
+
+    await createUser(createUserEvent);
   });
 
   const testBirthday = {
@@ -17,7 +41,6 @@ test.describe('AddBirthday API Integration Tests', () => {
 
   test('should add a birthday successfully', async () => {
     try {
-      const { handler: addBirthday } = await import('../../src/addBirthday/index');
 
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify(testBirthday),
@@ -25,7 +48,7 @@ test.describe('AddBirthday API Integration Tests', () => {
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
-        path: '/dev/birthdays',
+        path: `/${process.env.STAGE || 'dev'}/birthdays`,
         pathParameters: null,
         queryStringParameters: null,
         multiValueQueryStringParameters: null,
@@ -54,7 +77,6 @@ test.describe('AddBirthday API Integration Tests', () => {
   });
 
   test('should reject request with missing fields', async () => {
-    const { handler: addBirthday } = await import('../../src/addBirthday/index');
 
     const event: APIGatewayProxyEvent = {
       body: JSON.stringify({
@@ -65,7 +87,7 @@ test.describe('AddBirthday API Integration Tests', () => {
       multiValueHeaders: {},
       httpMethod: 'POST',
       isBase64Encoded: false,
-      path: '/dev/birthdays',
+      path: `/${process.env.STAGE || 'dev'}/birthdays`,
       pathParameters: null,
       queryStringParameters: null,
       multiValueQueryStringParameters: null,

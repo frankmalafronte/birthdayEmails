@@ -18,6 +18,48 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 
     const data : RegisterRequest = JSON.parse(event.body)
+
+    // Validate required fields
+    if (!data.email) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          error: 'requires property "email"'
+        })
+      };
+    }
+
+    if (!data.password) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          error: 'requires property "password"'
+        })
+      };
+    }
+
+    if (!data.name) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          error: 'requires property "name"'
+        })
+      };
+    }
+
+    // Validate password length
+    if (data.password.length < 8) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          error: 'password does not meet minimum length of 8'
+        })
+      };
+    }
     if (await getUserByEmail(data.email))
          return {
         statusCode: 409,
